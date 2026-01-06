@@ -1,0 +1,118 @@
+@page "/demodashboard"
+@rendermode InteractiveServer
+
+<PageTitle>Demo Dashboard</PageTitle>
+
+<div class="container">
+    <h1>Demo Dashboard</h1>
+
+    @if (!isLoggedIn)
+    {
+        <div class="login-form">
+            <h2>Login</h2>
+
+            <input placeholder="Username" @bind="username" />
+            <input placeholder="Password" type="password" @bind="password" />
+            <br /><br />
+            <button @onclick="HandleLogin">Login</button>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p style="color:red">@errorMessage</p>
+            }
+        </div>
+    }
+    else
+    {
+        <h2>Child Statistics</h2>
+
+        @if (stats.ContainsKey(loggedInUser))
+        {
+            var stat = stats[loggedInUser];
+
+            <ul>
+                <li><strong>Name:</strong> @stat.ChildName</li>
+                <li><strong>Study Time:</strong> @stat.StudyTime hours</li>
+                <li><strong>Lessons Completed:</strong> @stat.LessonsCompleted</li>
+                <li><strong>Average:</strong> @stat.ReportAverage</li>
+            </ul>
+        }
+        else
+        {
+            <p>No stats found for this account.</p>
+        }
+    }
+</div>
+
+@code {
+    // ========================
+    // STATE
+    // ========================
+    private string username = "";
+    private string password = "";
+    private bool isLoggedIn = false;
+    private string loggedInUser = "";
+    private string errorMessage = "";
+
+    // ========================
+    // HASH TABLE: USERS
+    // ========================
+    private Dictionary<string, LoginModel> users = new()
+    {
+        { "nathan", new LoginModel { Username="nathan", Password="1234", ChildId="nathan" } },
+        { "jessica", new LoginModel { Username="jessica", Password="abcd", ChildId="jessica" } },
+        { "sarah", new LoginModel { Username="sarah", Password="pass", ChildId="sarah" } }
+    };
+
+    // ========================
+    // HASH TABLE: CHILD STATS
+    // ========================
+    private Dictionary<string, Stat> stats = new()
+    {
+        { "nathan", new Stat { ChildName="Nathan", StudyTime=5, LessonsCompleted=2, ReportAverage=70 } },
+        { "jessica", new Stat { ChildName="Jessica", StudyTime=10, LessonsCompleted=5, ReportAverage=85 } },
+        { "sarah", new Stat { ChildName="Sarah", StudyTime=8, LessonsCompleted=4, ReportAverage=90 } }
+    };
+
+    // ========================
+    // LOGIN HANDLER
+    // ========================
+    private void HandleLogin()
+    {
+        errorMessage = "";
+
+        if (!users.ContainsKey(username))
+        {
+            errorMessage = "User not found";
+            return;
+        }
+
+        if (users[username].Password != password)
+        {
+            errorMessage = "Wrong password";
+            return;
+        }
+
+        // Login successful
+        loggedInUser = users[username].ChildId;
+        isLoggedIn = true;
+    }
+
+    // ========================
+    // MODELS
+    // ========================
+    private class LoginModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string ChildId { get; set; } = "";
+    }
+
+    private class Stat
+    {
+        public string ChildName { get; set; } = "";
+        public int StudyTime { get; set; }
+        public int LessonsCompleted { get; set; }
+        public int ReportAverage { get; set; }
+    }
+}

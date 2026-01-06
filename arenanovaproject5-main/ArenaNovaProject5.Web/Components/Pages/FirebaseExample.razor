@@ -1,0 +1,188 @@
+@page "/firebase-example"
+@rendermode InteractiveServer
+@using ArenaNovaProject5.Web.Services
+@inject FirebaseService Firebase
+
+<PageTitle>Firebase Example</PageTitle>
+
+<div class="container mt-4">
+    <h1>Firebase Integration Example</h1>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Authentication</h3>
+                </div>
+                <div class="card-body">
+                    @if (currentUser != null)
+                    {
+                        <div class="alert alert-success">
+                            Signed in as: @currentUser.Email
+                        </div>
+                        <button class="btn btn-danger" @onclick="SignOut">Sign Out</button>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" class="form-control" @bind="email" />
+                        </div>
+                        <div class="mb-3">
+                            <label>Password</label>
+                            <input type="password" class="form-control" @bind="password" />
+                        </div>
+                        <button class="btn btn-primary me-2" @onclick="SignIn">Sign In</button>
+                        <button class="btn btn-secondary" @onclick="SignUp">Sign Up</button>
+                    }
+
+                    @if (!string.IsNullOrEmpty(authMessage))
+                    {
+                        <div class="alert alert-info mt-3">@authMessage</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Firestore Database</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label>Collection</label>
+                        <input type="text" class="form-control" @bind="collectionName" placeholder="users" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Document ID</label>
+                        <input type="text" class="form-control" @bind="documentId" placeholder="user123" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Data (JSON)</label>
+                        <textarea class="form-control" rows="3" @bind="jsonData" 
+                                  placeholder='{"name": "John", "age": 25}'></textarea>
+                    </div>
+
+                    <button class="btn btn-success me-2" @onclick="SaveData">Save Document</button>
+                    <button class="btn btn-info me-2" @onclick="LoadData">Load Document</button>
+                    <button class="btn btn-warning" @onclick="LoadCollection">Load Collection</button>
+
+                    @if (!string.IsNullOrEmpty(dataMessage))
+                    {
+                        <div class="alert alert-info mt-3">
+                            <pre>@dataMessage</pre>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string email = "";
+    private string password = "";
+    private string authMessage = "";
+    private FirebaseUser? currentUser;
+
+    private string collectionName = "users";
+    private string documentId = "test-user";
+    private string jsonData = "{\"name\": \"John Doe\", \"age\": 25, \"email\": \"john@example.com\"}";
+    private string dataMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await Firebase.GetCurrentUserAsync();
+    }
+
+    private async Task SignIn()
+    {
+        var result = await Firebase.SignInAsync(email, password);
+        if (result.Success)
+        {
+            authMessage = $"Successfully signed in! User ID: {result.UserId}";
+            currentUser = await Firebase.GetCurrentUserAsync();
+        }
+        else
+        {
+            authMessage = $"Error: {result.Error}";
+        }
+    }
+
+    private async Task SignUp()
+    {
+        var result = await Firebase.SignUpAsync(email, password);
+        if (result.Success)
+        {
+            authMessage = $"Successfully signed up! User ID: {result.UserId}";
+            currentUser = await Firebase.GetCurrentUserAsync();
+        }
+        else
+        {
+            authMessage = $"Error: {result.Error}";
+        }
+    }
+
+    private async Task SignOut()
+    {
+        var result = await Firebase.SignOutAsync();
+        if (result.Success)
+        {
+            authMessage = "Successfully signed out!";
+            currentUser = null;
+        }
+        else
+        {
+            authMessage = $"Error: {result.Error}";
+        }
+    }
+
+    private async Task SaveData()
+    {
+        try
+        {
+            var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData);
+            var result = await Firebase.SetDocumentAsync(collectionName, documentId, data);
+            
+            if (result.Success)
+            {
+                dataMessage = "Document saved successfully!";
+            }
+            else
+            {
+                dataMessage = $"Error: {result.Error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            dataMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task LoadData()
+    {
+        var result = await Firebase.GetDocumentAsync<Dictionary<string, object>>(collectionName, documentId);
+        if (result != null)
+        {
+            dataMessage = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        else
+        {
+            dataMessage = "Document not found or error occurred";
+        }
+    }
+
+    private async Task LoadCollection()
+    {
+        var results = await Firebase.GetCollectionAsync<Dictionary<string, object>>(collectionName);
+        if (results.Any())
+        {
+            dataMessage = System.Text.Json.JsonSerializer.Serialize(results, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        else
+        {
+            dataMessage = "No documents found in collection";
+        }
+    }
+}

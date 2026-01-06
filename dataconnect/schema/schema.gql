@@ -1,0 +1,46 @@
+type ParentUser @table {
+  displayName: String!
+  email: String!
+  photoUrl: String
+  createdAt: Timestamp!
+}
+
+type ChildProfile @table {
+  parent: ParentUser!
+  name: String!
+  dateOfBirth: Date!
+  avatarUrl: String
+  gradeLevel: Int
+  createdAt: Timestamp!
+}
+
+type GameSession @table {
+  child: ChildProfile!
+  startTime: Timestamp!
+  endTime: Timestamp!
+  durationInMinutes: Int
+  score: Int
+  levelAchieved: Int
+  createdAt: Timestamp!
+}
+
+type LearningActivity @table {
+  name: String!
+  subject: String!
+  topic: String!
+  description: String
+  difficultyLevel: String
+}
+
+type ActivityProgress @table {
+  child: ChildProfile!
+  learningActivity: LearningActivity!
+  gameSession: GameSession
+  completionCount: Int!
+  correctAnswers: Int!
+  totalQuestions: Int!
+  accuracyPercentage: Float
+  timeSpentOnActivity: Int
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
