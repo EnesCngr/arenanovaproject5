@@ -1,118 +1,175 @@
 @page "/demodashboard"
 @rendermode InteractiveServer
+@inject FirebaseService Firebase
 
-<PageTitle>Demo Dashboard</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
-<div class="container">
-    <h1>Demo Dashboard</h1>
-
-    @if (!isLoggedIn)
-    {
-        <div class="login-form">
-            <h2>Login</h2>
-
-            <input placeholder="Username" @bind="username" />
-            <input placeholder="Password" type="password" @bind="password" />
-            <br /><br />
-            <button @onclick="HandleLogin">Login</button>
-
-            @if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <p style="color:red">@errorMessage</p>
-            }
-        </div>
-    }
-    else
-    {
-        <h2>Child Statistics</h2>
-
-        @if (stats.ContainsKey(loggedInUser))
-        {
-            var stat = stats[loggedInUser];
-
-            <ul>
-                <li><strong>Name:</strong> @stat.ChildName</li>
-                <li><strong>Study Time:</strong> @stat.StudyTime hours</li>
-                <li><strong>Lessons Completed:</strong> @stat.LessonsCompleted</li>
-                <li><strong>Average:</strong> @stat.ReportAverage</li>
-            </ul>
-        }
-        else
-        {
-            <p>No stats found for this account.</p>
-        }
-    }
-</div>
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+        <!-- Total Users Card -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Total Users</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@totalUsers</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Primary" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Active Parents -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Parents</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@parentCount</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" Size="Size.Large" Color="Color.Success" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Active Children -->
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Children</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@childCount</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.ChildCare" Size="Size.Large" Color="Color.Info" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Recent Users List -->
+        <MudItem xs="12" sm="6">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                        <MudText Typo="Typo.h6" Class="mb-2">Recent Registrations</MudText>
+                        @if (recentUsers.Any())
+                        {
+                            <MudList T="string" Dense="true">
+                                @foreach (var user in recentUsers.Take(3))
+                                {
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                                        @user.fullName - @user.role
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-2">No recent users</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                        <MudText Typo="Typo.h6">Quick Stats</MudText>
+                        <MudProgressLinear Value="@registrationRate" Color="Color.Primary" Class="mt-2" />
+                        <MudText Typo="Typo.caption">Registration Rate: @registrationRate%</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+        
+        <!-- Activity Chart Placeholder -->
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%">
+                <MudText Typo="Typo.h6">User Activity</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Last updated: @DateTime.Now.ToString("HH:mm")</span>
+                    }
+                </MudText>
+                <MudChart ChartType="ChartType.Line" ChartSeries="@chartSeries" 
+                          XAxisLabels="@xAxisLabels" Width="100%" Height="250px" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- More Cards -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Game Sessions</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@gameSessions</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Average Playtime</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@avgPlaytime min</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">System Status</MudText>
+                <MudChip T="string" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle" Class="mt-2">Online</MudChip>
+                <MudText Typo="Typo.body2" Class="mt-2">All systems operational</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 @code {
-    // ========================
-    // STATE
-    // ========================
-    private string username = "";
-    private string password = "";
-    private bool isLoggedIn = false;
-    private string loggedInUser = "";
-    private string errorMessage = "";
+    private int totalUsers = 0;
+    private int parentCount = 0;
+    private int childCount = 0;
+    private int gameSessions = 0;
+    private int avgPlaytime = 0;
+    private double registrationRate = 75.5;
+    private bool isLoading = true;
+    private List<UserData> recentUsers = new();
 
-    // ========================
-    // HASH TABLE: USERS
-    // ========================
-    private Dictionary<string, LoginModel> users = new()
+    // Chart data
+    private List<ChartSeries> chartSeries = new();
+    private string[] xAxisLabels = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+    protected override async Task OnInitializedAsync()
     {
-        { "nathan", new LoginModel { Username="nathan", Password="1234", ChildId="nathan" } },
-        { "jessica", new LoginModel { Username="jessica", Password="abcd", ChildId="jessica" } },
-        { "sarah", new LoginModel { Username="sarah", Password="pass", ChildId="sarah" } }
-    };
-
-    // ========================
-    // HASH TABLE: CHILD STATS
-    // ========================
-    private Dictionary<string, Stat> stats = new()
-    {
-        { "nathan", new Stat { ChildName="Nathan", StudyTime=5, LessonsCompleted=2, ReportAverage=70 } },
-        { "jessica", new Stat { ChildName="Jessica", StudyTime=10, LessonsCompleted=5, ReportAverage=85 } },
-        { "sarah", new Stat { ChildName="Sarah", StudyTime=8, LessonsCompleted=4, ReportAverage=90 } }
-    };
-
-    // ========================
-    // LOGIN HANDLER
-    // ========================
-    private void HandleLogin()
-    {
-        errorMessage = "";
-
-        if (!users.ContainsKey(username))
-        {
-            errorMessage = "User not found";
-            return;
-        }
-
-        if (users[username].Password != password)
-        {
-            errorMessage = "Wrong password";
-            return;
-        }
-
-        // Login successful
-        loggedInUser = users[username].ChildId;
-        isLoggedIn = true;
+        await LoadDashboardData();
+        InitializeChart();
     }
 
-    // ========================
-    // MODELS
-    // ========================
-    private class LoginModel
+    private async Task LoadDashboardData()
     {
-        public string Username { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string ChildId { get; set; } = "";
+        try
+        {
+            // Load all users from Firestore
+            var users = await Firebase.GetCollectionAsync<UserData>("users");
+            
+            totalUsers = users.Count();
+            parentCount = users.Count(u => u.role == "parent");
+            childCount = users.Count(u => u.role == "child");
+            recentUsers = users.OrderByDescending(u => u.createdAt).Take(5).ToList();
+            
+            // Mock data for now
+            gameSessions = 142;
+            avgPlaytime = 23;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
-    private class Stat
+    private void InitializeChart()
     {
-        public string ChildName { get; set; } = "";
-        public int StudyTime { get; set; }
-        public int LessonsCompleted { get; set; }
-        public int ReportAverage { get; set; }
+        chartSeries = new List<ChartSeries>
+        {
+            new ChartSeries { Name = "Registrations", Data = new double[] { 5, 8, 12, 7, 15, 10, 14 } }
+        };
+    }
+
+    public class UserData
+    {
+        public string uid { get; set; } = string.Empty;
+        public string email { get; set; } = string.Empty;
+        public string fullName { get; set; } = string.Empty;
+        public string role { get; set; } = string.Empty;
+        public string createdAt { get; set; } = string.Empty;
     }
 }

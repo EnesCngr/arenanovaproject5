@@ -22,15 +22,7 @@
                     <input type="text" class="form-control" id="signup-fullname" 
                            @bind="fullName" placeholder="Full Name" required />
                 </div>
-                <div class="mb-3">
-                    <label for="role" class="form-label">role</label>
-                    <select class="form-control" @bind="role" disabled="@isLoading">
-                      <option value="">-- Select Role --</option>
-                     <option value="parent">Parent</option>
-                     <option value="child">Child</option>
-                </select>
-                </div>
-                
+       
                 <div class="mb-3">
                     <label for="signup-email" class="form-label">Email</label>
                     <input type="email" class="form-control" id="signup-email" 

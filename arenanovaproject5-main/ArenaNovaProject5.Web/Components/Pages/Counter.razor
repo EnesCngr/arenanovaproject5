@@ -1,19 +1,106 @@
 ﻿@page "/counter"
 @rendermode InteractiveServer
+@using MudBlazor 
 
 <PageTitle>Counter</PageTitle>
 
-<h1>Counter</h1>
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-16 ma-2" Style="background-color: #f8faf8; border-radius: 16px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);">
+                <MudText Typo="Typo.h5" Class="mb-3" Style="color: rgb(15, 14, 14);">total study time</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-16 ma-2" Style="background-color: #f8faf8; border-radius: 16px; border: 3px solid #000000; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);">
+                <MudText Typo="Typo.h6" Class="mb-3" Style="color: rgb(15, 14, 14);">Lesson completed</MudText>
+            </MudPaper>
+        </MudItem>
 
-<p role="status">Current count: @currentCount</p>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-16 ma-2" Style="background-color:#f8faf8; border-radius: 16px; border: 3px solid #000000; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);">
+                <MudText Typo="Typo.body1" Class="mb-3" Style="color: rgb(15, 14, 14);">quiz average </MudText>
+            </MudPaper>
+        </MudItem>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-16 ma-2" Style="background-color: #f8faf8; border-radius: 16px; border: 3px solid #000000; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);">
+                <MudText Typo="Typo.body1" Class="mb-3" Style="color: rgb(15, 14, 14);">achievements</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
+    <MudGrid Class="mt-8">
+        <MudItem xs="12" sm="6" md="6">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%; background-color: #f8faf8; border: 3px solid #000000; border-radius: 16px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);">
+                <MudText Typo="Typo.h6">User Activity</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Last updated: @DateTime.Now.ToString("HH:mm")</span>
+                    }
+                </MudText>
+                <MudChart ChartType="ChartType.Line" 
+                          ChartSeries="@chartSeries" 
+                          XAxisLabels="@xAxisLabels" 
+                          Width="100%" 
+                          Height="250px" />
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="6">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%; background-color: #f8faf8; border: 3px solid #000000; border-radius: 16px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);">
+                <MudText Typo="Typo.h6">Quiz Performance</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Last updated: @DateTime.Now.ToString("HH:mm")</span>
+                    }
+                </MudText>
+                <MudChart ChartType="ChartType.Line" 
+                          ChartSeries="@chartSeries" 
+                          XAxisLabels="@xAxisLabels" 
+                          Width="100%" 
+                          Height="250px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+ <MudCard>
+    <MudCardContent>
+        <MudText Typo="Typo.h6" Class="mb-3">Recent Achievements</MudText>
+        <MudList T="string" Dense="true">
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Star">
+                Completed "Math Basics" Lesson
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Star">
+                Scored 95% on "Science Quiz 1"
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Star">
+                Logged 10 Hours of Study Time
+            </MudListItem>
+        </MudList>
+    </MudCardContent>
+</MudCard>
+</MudContainer>
 @code {
-    private int currentCount = 0;
+    private bool isLoading = false;
+    private List<ChartSeries> chartSeries = new();
+    private string[] xAxisLabels = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 
-    private void IncrementCount()
+    protected override void OnInitialized()
     {
-        currentCount++;
+        chartSeries = new List<ChartSeries>
+        {
+            new ChartSeries { Name = "Study Time", Data = new double[] { 2, 4, 3, 5, 6, 4, 7 } }
+        };
     }
 }

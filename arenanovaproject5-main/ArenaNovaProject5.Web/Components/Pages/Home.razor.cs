@@ -30,7 +30,7 @@ namespace ArenaNovaProject5.Web.Components.Pages
                 await JS.InvokeVoidAsync("console.log", "Starting registration...");
 
                 if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) || 
-                    string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(role))
+                    string.IsNullOrWhiteSpace(password))
                 {
                     message = "Please fill in all fields.";
                     return;
@@ -62,7 +62,7 @@ namespace ArenaNovaProject5.Web.Components.Pages
                     uid = authResult.LocalId,
                     email = authResult.Email,
                     fullName = fullName,
-                    role = role,
+                    role = "parent",
                     createdAt = DateTime.UtcNow.ToString("o")
                 };
 
@@ -78,7 +78,6 @@ namespace ArenaNovaProject5.Web.Components.Pages
                     
                     // Clear form
                     fullName = string.Empty;
-                    role = string.Empty;
                     email = string.Empty;
                     password = string.Empty;
                 }
