@@ -28,7 +28,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// ✅ NET8 için şart: wwwroot (css/js) servis et
 app.UseStaticFiles();
 
 app.UseAntiforgery();
