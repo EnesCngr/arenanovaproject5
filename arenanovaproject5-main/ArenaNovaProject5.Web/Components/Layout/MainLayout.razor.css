@@ -1,69 +1,58 @@
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-.spacerclass {
-    height: 56px;
-    background: linear-gradient(90deg, rgb(30, 143, 230) 0%, #714bdc 100%) ;
+.app-shell{
+  display:flex;
+  min-height:100vh;
+  background:#f6f8fb;
 }
 
-.app-name {
-    position: absolute;
-    top: 10px;
-    left: 100px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
+.sidebar{
+  width:260px;
+  background:#ffffff;
+  border-right:1px solid #e5e7eb;
+  padding:14px;
 }
+
+.brand{
+  margin-bottom:16px;
+}
+
+.app-name{
+  font-size:18px;
+  font-weight:800;
+}
+
 .app-state{
-    position: absolute;
-    top: 10px;
-    left: 230px;
-    font-size: 1rem;
-    font-weight: 700;
-    color: white;
-}   
-
-.app-info {
-    position: absolute;
-    top: 30px;
-    left: 230px;
-    font-size: 0.85rem;
-    font-weight: 400;
-    color: white;
-}    
-.navbar-header {
-    background: linear-gradient(90deg, rgb(22, 80, 187) 0%, #3ec6de 100%);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size:13px;
+  color:#6b7280;
 }
 
-main {
-    flex: 1;
-    padding-top: 2rem;
+.app-info{
+  font-size:12px;
+  color:#6b7280;
 }
 
-#blazor-error-ui {
-    color-scheme: light only;
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.content{
+  padding:16px;
+}
+
+.btn{
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #e5e7eb;
+  background:white;
+  cursor:pointer;
+}
