@@ -17,6 +17,9 @@ builder.Services.AddScoped<FirebaseService>();
 // Register Firebase Auth Service with HttpClient
 builder.Services.AddHttpClient<FirebaseAuthService>();
 
+// Register Memory Cache
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
