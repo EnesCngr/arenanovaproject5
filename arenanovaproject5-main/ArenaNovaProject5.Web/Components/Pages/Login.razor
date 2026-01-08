@@ -1,0 +1,79 @@
+@page "/login"
+@using System.ComponentModel.DataAnnotations
+@using ArenaNovaProject5.Web.Services
+@inject FirebaseAuthService FirebaseAuth
+@inject AuthSessionService Session
+@inject FirebaseAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<h3>Parent Login</h3>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-danger">@Error</div>
+}
+
+<EditForm Model="@Model" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="Model.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <InputText class="form-control" type="password" @bind-Value="Model.Password" />
+    </div>
+
+    <button class="btn btn-primary" disabled="@IsBusy">
+        @(IsBusy ? "Logging in..." : "Login")
+    </button>
+</EditForm>
+
+@code {
+    private LoginModel Model = new();
+    private bool IsBusy;
+    private string? Error;
+
+    [SupplyParameterFromQuery] public string? returnUrl { get; set; }
+
+    private async Task HandleLogin()
+    {
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            // TODO: FirebaseAuthService metod adını sizdeki dosyaya göre düzelteceğiz
+            var res = await FirebaseAuth.SignInAsync(Model.Email, Model.Password);
+
+            if (res is null || string.IsNullOrWhiteSpace(res.IdToken))
+            {
+                Error = "Login failed.";
+                return;
+            }
+
+            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? Model.Email);
+            AuthState.NotifyAuthChanged();
+
+            var target = string.IsNullOrWhiteSpace(returnUrl) ? "/dashboard" : "/" + returnUrl.TrimStart('/');
+            Nav.NavigateTo(target);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        [Required, EmailAddress] public string Email { get; set; } = "";
+        [Required, MinLength(6)] public string Password { get; set; } = "";
+    }
+}
