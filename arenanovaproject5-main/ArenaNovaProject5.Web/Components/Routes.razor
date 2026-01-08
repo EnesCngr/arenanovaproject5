@@ -3,37 +3,14 @@
 
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
-
-        @* Public pages *@
-        @if (IsPublicRoute(routeData))
-        {
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-        }
-        else
-        {
-            <RequireAuth>
-                <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-            </RequireAuth>
-        }
-
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.AuthorizedLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
 
     <NotFound>
-        <LayoutView Layout="@typeof(Layout.MainLayout)">
+        <LayoutView Layout="@typeof(Layout.AuthorizedLayout)">
             <h1>Page not found</h1>
             <p>The page you requested does not exist.</p>
         </LayoutView>
     </NotFound>
 </Router>
-
-@code {
-    private static bool IsPublicRoute(RouteData routeData)
-    {
-        // Public sayfalarınızı buraya ekleyin
-        var name = routeData.PageType.Name;
-
-        return name is "Login" or "Signup" or "ForgotPassword";
-    }
-}

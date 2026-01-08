@@ -4,7 +4,7 @@ using Microsoft.JSInterop;
 
 namespace ArenaNovaProject5.Web.Components.Pages
 {
-    public partial class Home
+    public partial class Signup
     {
         [Inject] private FirebaseAuthService AuthService { get; set; } = default!;
         [Inject] private FirebaseService FirebaseService { get; set; } = default!;

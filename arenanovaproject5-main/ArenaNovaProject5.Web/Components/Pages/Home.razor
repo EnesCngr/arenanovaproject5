@@ -1,52 +1,11 @@
 ﻿@page "/"
-@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+@inject NavigationManager Nav
 
-<PageTitle>Home</PageTitle>
-
-<div class="container mt-4">
-    <h2>Registration Form</h2>
-    
-    @if (!string.IsNullOrEmpty(message))
+@code {
+    protected override void OnInitialized()
     {
-        <div class="alert @(isSuccess ? "alert-success" : "alert-danger")" role="alert">
-            @message
-        </div>
+        Nav.NavigateTo("/login");
     }
-
-    <div id="modal-signup" class="modals">
-        <div class="modal-content">
-            <form id="signup-form" @onsubmit="HandleSignUp" @onsubmit:preventDefault="true">
-               
-                <div class="mb-3">
-                    <label for="signup-fullname" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="signup-fullname" 
-                           @bind="fullName" placeholder="Full Name" required />
-                </div>
-       
-                <div class="mb-3">
-                    <label for="signup-email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="signup-email" 
-                           @bind="email" placeholder="Email" required />
-                </div>
-
-                <div class="mb-3">
-                    <label for="signup-password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="signup-password" 
-                           @bind="password" placeholder="Password" required />
-                </div>
-                
-                <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                    @if (isLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        <span>Signing Up...</span>
-                    }
-                    else
-                    {
-                        <span>Sign Up</span>
-                    }
-                </button>
-            </form>
-        </div>  
-    </div>
-</div>
+}

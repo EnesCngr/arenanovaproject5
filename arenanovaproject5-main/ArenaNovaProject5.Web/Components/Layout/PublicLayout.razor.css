@@ -1,0 +1,45 @@
+.public-layout {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.spacerclass {
+    height: 56px;
+    background: linear-gradient(90deg, rgb(30, 143, 230) 0%, #714bdc 100%);
+}
+
+.app-name {
+    position: absolute;
+    top: 10px;
+    left: 100px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.app-state {
+    position: absolute;
+    top: 10px;
+    left: 230px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+}
+
+.app-info {
+    position: absolute;
+    top: 30px;
+    left: 230px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: white;
+}
+
+.public-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
