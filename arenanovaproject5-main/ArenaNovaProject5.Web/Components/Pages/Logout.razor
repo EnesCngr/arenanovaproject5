@@ -1,0 +1,14 @@
+@page "/logout"
+@using ArenaNovaProject5.Web.Services
+@inject AuthSessionService Session
+@inject FirebaseAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        Session.Clear();
+        AuthState.NotifyAuthChanged();
+        Nav.NavigateTo("/login");
+    }
+}
