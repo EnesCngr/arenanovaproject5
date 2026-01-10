@@ -181,6 +181,7 @@ main {
         padding-bottom: 1.25rem;
     }
 }
+
 .navbar-header{
   padding-bottom: 8px;
 }
@@ -189,4 +190,14 @@ main {
   background: radial-gradient(1200px 720px at 22% 0%, rgba(170, 210, 245, 0.55), transparent 62%),
               radial-gradient(900px 650px at 92% 18%, rgba(150, 190, 235, 0.35), transparent 60%),
               #eef6ff !important;
+}
+
+/* Global content container */
+.content {
+  padding: 24px 20px;
+}
+
+.content > * {
+  max-width: 1200px;
+  margin: 0 auto;
 }

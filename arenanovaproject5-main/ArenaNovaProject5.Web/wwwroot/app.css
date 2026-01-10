@@ -292,3 +292,161 @@ table th:first-child {
         display: none;
     }
 }
+
+.card {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(15,23,42,0.12), 0 4px 10px rgba(15,23,42,0.06);
+}
+/* ===== DASHBOARD LAYOUT ===== */
+.dashboard-root {
+  padding: 32px 48px 64px;
+}
+
+/* ===== STAT CARDS ===== */
+.stat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 22px 24px;
+  min-height: 110px;
+
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15,23,42,.12);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+
+.stat-icon.blue { background: #e0ecff; color: #2563eb; }
+.stat-icon.green { background: #dcfce7; color: #16a34a; }
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: rgba(15,23,42,.65);
+}
+
+.stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.stat-sub {
+  font-size: 0.75rem;
+  color: rgba(15,23,42,.55);
+}
+
+.stat-delta {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.stat-delta.positive { color: #16a34a; }
+
+/* ===== PANELS ===== */
+.panel-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px 26px;
+  min-height: 320px;
+  box-shadow: 0 12px 30px rgba(15,23,42,.12);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.panel-sub {
+  font-size: 0.8rem;
+  color: rgba(15,23,42,.55);
+}
+
+/* ===== ACHIEVEMENTS ===== */
+.achievement {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(15,23,42,.06);
+}
+
+.ach-icon {
+  width: 36px;
+  height: 36px;
+  background: #fef3c7;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.ach-text span {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(15,23,42,.6);
+}
+
+.ach-time {
+  font-size: 0.75rem;
+  color: rgba(15,23,42,.55);
+}
+
+/* ===== SUMMARY ===== */
+.summary-card {
+  min-height: 320px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.summary-list {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-list div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.status-pill {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
