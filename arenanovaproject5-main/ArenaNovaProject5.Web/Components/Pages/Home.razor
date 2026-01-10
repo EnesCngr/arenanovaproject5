@@ -1,11 +1,77 @@
 ﻿@page "/"
-@using Microsoft.AspNetCore.Authorization
-@attribute [AllowAnonymous]
-@inject NavigationManager Nav
+@layout PublicLayout
+@using MudBlazor
 
-@code {
-    protected override void OnInitialized()
-    {
-        Nav.NavigateTo("/login");
-    }
-}
+<section class="hero">
+    <div class="hero-inner">
+        <h1>Monitor Your Child’s Learning Journey</h1>
+        <p>
+            ArenaNova helps parents track progress, understand performance,
+            and support learning all in one simple dashboard.
+        </p>
+
+        <div class="hero-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="/login">
+                Get Started
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" Href="/demodashboard">
+                View Demo
+            </MudButton>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="features-grid">
+        <div class="feature-card">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+            <h3>Track Progress</h3>
+            <p>See learning trends, quiz results, and improvement over time.</p>
+        </div>
+
+        <div class="feature-card">
+            <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+            <h3>Study Time Insights</h3>
+            <p>Understand how much time your child spends learning each day.</p>
+        </div>
+
+        <div class="feature-card">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" />
+            <h3>Achievements</h3>
+            <p>Celebrate milestones and motivate consistent learning.</p>
+        </div>
+
+        <div class="feature-card">
+            <MudIcon Icon="@Icons.Material.Filled.Security" />
+            <h3>Parent Friendly</h3>
+            <p>Clear summaries designed for parents, not educators.</p>
+        </div>
+    </div>
+</section>
+
+<section class="how">
+    <h2>How it works</h2>
+
+    <div class="how-steps">
+        <div>
+            <span>1</span>
+            <p>Parent logs in</p>
+        </div>
+
+        <div>
+            <span>2</span>
+            <p>Child plays & learns</p>
+        </div>
+
+        <div>
+            <span>3</span>
+            <p>Progress is tracked automatically</p>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <p>ArenaNova Project 5 · Jam Lab</p>
+    <small>Demo project</small>
+</footer>
