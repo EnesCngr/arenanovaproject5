@@ -1,42 +1,40 @@
-﻿<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #ffffff;">
-    <div class="container-fluid">
-        
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="dashboard">
-                        <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Dashboard
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="weather">
-                        <span class="bi bi-list-nested" aria-hidden="true"></span> Weather
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="play/demo">
-                        <span class="bi bi-controller" aria-hidden="true"></span> Play Demo
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="demodashboard">
-                        <span class="bi bi-speedometer2" aria-hidden="true"></span> Demo Dashboard
-                    </NavLink>
-                </li>
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
 
-            </ul>
-            <div class="ms-auto">
-                <a class="nav-link" href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-            </div>
+<nav class="topnav">
+    <MudContainer MaxWidth="MaxWidth.False" Class="topnav-inner">
+        <div class="topnav-links">
+
+            <NavLink href="/dashboard" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="nav-ic" />
+                <span>Dashboard</span>
+            </NavLink>
+
+            <NavLink href="/profile" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.PersonOutline" Class="nav-ic" />
+                <span>Profile</span>
+            </NavLink>
+
+            <NavLink href="/progress" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="nav-ic" />
+                <span>Progress</span>
+            </NavLink>
+
+            <NavLink href="/analytics" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="nav-ic" />
+                <span>Analytics</span>
+            </NavLink>
+
+            <NavLink href="/controls" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Settings" Class="nav-ic" />
+                <span>Controls</span>
+            </NavLink>
+
+            <NavLink href="/activity" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="nav-ic" />
+                <span>Activity</span>
+            </NavLink>
+
         </div>
-    </div>
+    </MudContainer>
 </nav>

@@ -1,0 +1,86 @@
+@page "/analytics"
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+    <MudText Typo="Typo.h4">Analytics</MudText>
+    <MudText Typo="Typo.body2" Class="muted">Performance insights (mock).</MudText>
+
+    <div class="spacer"></div>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="4">
+            <MudCard Class="card"><MudCardContent>
+                <MudText Typo="Typo.subtitle2">Quiz Average</MudText>
+                <MudText Typo="Typo.h4">87%</MudText>
+                <MudText Typo="Typo.body2" Class="muted">Last 7 days</MudText>
+            </MudCardContent></MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudCard Class="card"><MudCardContent>
+                <MudText Typo="Typo.subtitle2">Accuracy</MudText>
+                <MudText Typo="Typo.h4">91%</MudText>
+                <MudText Typo="Typo.body2" Class="muted">Correct answers ratio</MudText>
+            </MudCardContent></MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudCard Class="card"><MudCardContent>
+                <MudText Typo="Typo.subtitle2">Time / Question</MudText>
+                <MudText Typo="Typo.h4">18s</MudText>
+                <MudText Typo="Typo.body2" Class="muted">Median</MudText>
+            </MudCardContent></MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Quiz Performance Trend</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Last 7 days</MudText>
+
+                    <div class="spacer"></div>
+
+                    <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@Days" Height="260px" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="5">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Highlights</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Simple list (no MudListItemIcon/Text)</MudText>
+
+                    <div class="spacer"></div>
+
+                    <div class="li">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="li-icon" />
+                        <div class="li-text">
+                            <MudText Typo="Typo.subtitle2">Fractions</MudText>
+                            <MudText Typo="Typo.body2" Class="muted">Strong • 93%</MudText>
+                        </div>
+                    </div>
+
+                    <MudDivider />
+
+                    <div class="li">
+                        <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Class="li-icon" />
+                        <div class="li-text">
+                            <MudText Typo="Typo.subtitle2">Geometry</MudText>
+                            <MudText Typo="Typo.body2" Class="muted">Needs work • 68%</MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private string[] Days = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+    private List<ChartSeries> Series = new()
+    {
+        new ChartSeries { Name = "Quiz", Data = new double[] { 78, 82, 85, 88, 90, 87, 93 } }
+    };
+}

@@ -1,104 +1,64 @@
-.navbar{
-  background: rgba(255,255,255,0.96) !important;
-  border-bottom: 1px solid rgba(15,23,42,0.06);
-  padding: 0.6rem 1rem;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  overflow: visible;
+.topnav {
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+  overflow: visible; /* underline kaybolmasın */
 }
 
-.navbar .container-fluid{ padding-left:0; padding-right:0; }
+/* üst mavi bar ile menü arasında boşluk + genişlik hissi */
+.topnav-inner {
+  padding: 18px 26px 12px; /* top right/left bottom */
+}
 
-.navbar-nav{
-  gap: 0.4rem;
+/* yan yana, tek satır */
+.topnav-links {
+  display: flex;
   align-items: center;
+  gap: 28px;
+  flex-wrap: nowrap; /* alt satıra düşmesin */
 }
 
-/* Link base */
-.nav-item ::deep .nav-link{
-  position: relative;              /* underline anchor */
+/* menu item */
+.topnav-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 10px;
 
-  padding: 0.55rem 0.9rem;
-  font-weight: 600;
-  font-size: 0.95rem;
+  padding: 14px 14px;
+  border-radius: 10px;
 
-  color: rgba(15,23,42,0.72);
+  font-size: 16px;
+  font-weight: 500;
+
   text-decoration: none;
-  background: transparent;
-  border: none;
+  color: inherit;
+  opacity: 0.95;
 
-  transition: color 160ms ease;
+  z-index: 1;
 }
 
-.nav-item ::deep .nav-link:hover{
-  color: rgba(15,23,42,0.92);
-}
-
-/* Icon */
-.bi{
-  width: 1rem;
-  height: 1rem;
-  background-size: contain;
-  background-repeat: no-repeat;
-  filter: invert(1) brightness(0.4);
-  opacity: 0.9;
-}
-
-.nav-item ::deep a.active .bi{
-  filter: invert(1) brightness(0.25);
+.topnav-link:hover {
   opacity: 1;
 }
 
-/* Text wrapper (used for measuring underline width) */
-.nav-item ::deep .nav-text{
-  display: inline-block;
+/* icon */
+.nav-ic {
+  font-size: 22px;
+  opacity: 0.9;
 }
 
-/* Active text color */
-.nav-item ::deep a.active{
-  color: rgba(15,23,42,0.95);
-}
-
-/* ✅ Underline: positioned by link, sized by text, centered exactly */
-.nav-item ::deep a.active::after{
+/* ACTIVE underline - kesin görünür (linkin içinde) */
+.topnav-link.is-active::after {
   content: "";
   position: absolute;
+  left: 10px;
+  right: 10px;
 
-  /* center under the TEXT, not icon */
-  left: 50%;
-  transform: translateX(-50%);
-
-  /* vertical position */
-  bottom: -6px;
-
-  /* width will be overwritten in a safe way using CSS var fallback */
-  width: calc(var(--nav-text-width, 100%) - 0px);
-  max-width: 100%;
-
+  bottom: 4px;        /* element DIŞINA çıkmıyor -> kaybolmaz */
   height: 3px;
+
   border-radius: 999px;
-  background: #2563eb;
-}
+  background: #1f6fff;
 
-/* Right-side About */
-.ms-auto .nav-link{
-  color: rgba(15,23,42,0.7);
-  font-weight: 600;
-  padding: 0.55rem 0.9rem;
-  text-decoration: none;
-}
-
-.ms-auto .nav-link:hover{
-  color: rgba(15,23,42,0.95);
-}
-
-/* Mobile */
-@media (max-width: 991.98px){
-  .navbar-nav{ padding-top: 0.75rem; }
-  .nav-item ::deep .nav-link{ justify-content: center; width: 100%; }
-  .ms-auto{ padding-top: 0.5rem; }
-  .nav-item ::deep a.active::after{ bottom: -4px; }
+  z-index: 2;
 }

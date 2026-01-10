@@ -1,203 +1,53 @@
-:root {
-    --text: #0f172a;
-    --muted: rgba(15, 23, 42, 0.72);
-
-    --border: rgba(15, 23, 42, 0.10);
-    --shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
-
-    --radius: 14px;
-    --max: 1200px;
-
-    --gutter: 18px;
-    --bar-h: 56px;
-
-    --brand: #ffffff;
+.topnav {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
 }
 
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-
-    /* Background already inline in razor, so keep this minimal */
-    color: var(--text);
+.topnav-inner {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
-/* Top gradient bar */
-.spacerclass {
-    height: var(--bar-h);
-    background: linear-gradient(90deg, rgb(30, 143, 230) 0%, #714bdc 100%);
-    position: relative;
-
-    /* Subtle depth */
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
+/* yan yana */
+.topnav-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
 }
 
-/* Brand texts (use absolute positioning like you already do, but slightly refined) */
-.app-name {
-    position: absolute;
-    top: 12px;
-    left: 18px;
+/* link görünümü */
+.topnav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--brand);
-    letter-spacing: 0.2px;
+  padding: 10px 6px;
+  border-radius: 10px;
+
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.90;
 }
 
-.app-state {
-    position: absolute;
-    top: 12px;
-    left: 150px;
-
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.92);
+.topnav-link:hover {
+  opacity: 1;
 }
 
-.app-info {
-    position: absolute;
-    top: 30px;
-    left: 150px;
-
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.78);
+.nav-ic {
+  font-size: 18px;
+  opacity: 0.9;
 }
 
-/* Navbar container: sticky + clean separation */
-.navbar-header {
-    background: rgba(255, 255, 255, 0.85); /* supports your white navbar */
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-
-    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(10px);
-}
-
-/* Main area */
-main {
-    flex: 1;
-    padding-top: 1.25rem;
-    padding-bottom: 1.75rem;
-}
-
-/* Content container: keep bootstrap px-4 but constrain width and add "panel" feel */
-.content {
-    max-width: var(--max);
-    margin: 0 auto;
-
-    /* Panel look */
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(15, 23, 42, 0.10);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-
-    padding-top: 1.1rem;
-    padding-bottom: 1.1rem;
-}
-
-/* Headings inside pages (generic) */
-.content :deep(h1),
-.content :deep(h2),
-.content :deep(h3) {
-    color: var(--text);
-    margin-top: 0;
-}
-
-/* Improve default form/control spacing a bit */
-.content :deep(.form-control),
-.content :deep(.btn),
-.content :deep(.card) {
-    border-radius: 10px;
-}
-
-/* Error UI (keep your original, slightly polished) */
-#blazor-error-ui {
-    color-scheme: light only;
-    background: #fff7cc;
-    bottom: 0;
-    box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.14);
-    box-sizing: border-box;
-    display: none;
-    left: 0;
-    padding: 0.75rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 2000;
-}
-
-#blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.6rem;
-}
-
-/* =========================
-   Responsive fixes
-   ========================= */
-@media (max-width: 992px) {
-    .app-state,
-    .app-info {
-        left: 140px;
-    }
-
-    main {
-        padding-top: 1rem;
-    }
-
-    .content {
-        border-radius: 12px;
-    }
-}
-
-@media (max-width: 640px) {
-    :root {
-        --bar-h: 64px;
-    }
-
-    /* Stack brand text on small screens (remove hard left offsets) */
-    .app-name {
-        top: 10px;
-        left: 14px;
-        font-size: 1.15rem;
-    }
-
-    .app-state {
-        top: 30px;
-        left: 14px;
-        font-size: 0.9rem;
-    }
-
-    .app-info {
-        display: none; /* optional: avoid cramped header */
-    }
-
-    main {
-        padding-top: 0.9rem;
-        padding-bottom: 1.25rem;
-    }
-}
-
-.navbar-header{
-  padding-bottom: 8px;
-}
-
-.page {
-  background: radial-gradient(1200px 720px at 22% 0%, rgba(170, 210, 245, 0.55), transparent 62%),
-              radial-gradient(900px 650px at 92% 18%, rgba(150, 190, 235, 0.35), transparent 60%),
-              #eef6ff !important;
-}
-
-/* Global content container */
-.content {
-  padding: 24px 20px;
-}
-
-.content > * {
-  max-width: 1200px;
-  margin: 0 auto;
+/* aktif underline */
+.topnav-link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 999px;
+  background: #2f6fff;
 }

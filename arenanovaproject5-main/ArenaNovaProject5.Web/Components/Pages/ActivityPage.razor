@@ -1,0 +1,78 @@
+@page "/activity"
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+    <MudText Typo="Typo.h4">Activity</MudText>
+    <MudText Typo="Typo.body2" Class="muted">
+        Session & event log (mock).
+    </MudText>
+
+    <div class="spacer"></div>
+
+    <MudCard Class="card">
+        <MudCardContent>
+            <MudText Typo="Typo.h6">Recent Events</MudText>
+            <MudText Typo="Typo.body2" Class="muted">
+                Today / Yesterday / Last 7 days
+            </MudText>
+
+            <div class="spacer"></div>
+
+            @foreach (var a in Items)
+            {
+                <div class="event">
+                    <MudIcon Icon="@a.Icon" Class="event-icon" />
+                    <div class="event-text">
+                        <MudText Typo="Typo.subtitle2">@a.Title</MudText>
+                        <MudText Typo="Typo.body2" Class="muted">@a.Detail</MudText>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="muted">@a.When</MudText>
+                </div>
+                <MudDivider />
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<ActivityRow> Items = new()
+    {
+        new ActivityRow(
+            Icons.Material.Filled.PlayCircleOutline,
+            "Session started",
+            "Opened the app and selected Alex",
+            "Today 18:40"
+        ),
+        new ActivityRow(
+            Icons.Material.Filled.School,
+            "Lesson completed",
+            "Math • Multiplication basics",
+            "Today 18:58"
+        ),
+        new ActivityRow(
+            Icons.Material.Filled.AssignmentTurnedIn,
+            "Quiz finished",
+            "Score: 9/10 • Time: 2m 10s",
+            "Today 19:05"
+        ),
+        new ActivityRow(
+            Icons.Material.Filled.EmojiEvents,
+            "Achievement unlocked",
+            "Speed Champion",
+            "Yesterday 20:11"
+        ),
+        new ActivityRow(
+            Icons.Material.Filled.Timeline,
+            "Weekly summary viewed",
+            "Checked progress overview",
+            "2 days ago"
+        ),
+    };
+
+    private record ActivityRow(
+        string Icon,
+        string Title,
+        string Detail,
+        string When
+    );
+}

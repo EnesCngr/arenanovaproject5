@@ -1,0 +1,96 @@
+@page "/profile"
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+    <MudText Typo="Typo.h4">Profile</MudText>
+    <MudText Typo="Typo.body2" Class="muted">Parent & child overview (mock UI).</MudText>
+
+    <div class="spacer"></div>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="7">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <div class="row-between">
+                        <div class="row">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Class="big-icon" />
+                            <div class="ml">
+                                <MudText Typo="Typo.h6">Active Child: Alex</MudText>
+                                <MudText Typo="Typo.body2" Class="muted">Grade 4 • Level 12 • Last active: Today</MudText>
+                            </div>
+                        </div>
+                        <MudText Typo="Typo.subtitle2" Class="pill">Active</MudText>
+                    </div>
+
+                    <div class="spacer"></div>
+
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="4">
+                            <MudCard Class="mini">
+                                <MudCardContent>
+                                    <MudText Typo="Typo.caption" Class="muted">Streak</MudText>
+                                    <MudText Typo="Typo.h6">6 days</MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudCard Class="mini">
+                                <MudCardContent>
+                                    <MudText Typo="Typo.caption" Class="muted">Goal</MudText>
+                                    <MudText Typo="Typo.h6">45 min/day</MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudCard Class="mini">
+                                <MudCardContent>
+                                    <MudText Typo="Typo.caption" Class="muted">Focus</MudText>
+                                    <MudText Typo="Typo.h6">Math</MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="5">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Parent Settings (UI)</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">No backend / no save.</MudText>
+
+                    <div class="spacer"></div>
+
+                    <div class="kv">
+                        <MudText Typo="Typo.body2" Class="muted">Email</MudText>
+                        <MudText Typo="Typo.subtitle2">parent@demo.com</MudText>
+                    </div>
+                    <MudDivider />
+
+                    <div class="kv">
+                        <MudText Typo="Typo.body2" Class="muted">Notifications</MudText>
+                        <MudText Typo="Typo.subtitle2">Enabled</MudText>
+                    </div>
+                    <MudDivider />
+
+                    <div class="kv">
+                        <MudText Typo="Typo.body2" Class="muted">Weekly Summary</MudText>
+                        <MudText Typo="Typo.subtitle2">Enabled</MudText>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Child Selector</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">
+                        If you have Childselector.razor, you can render it here later.
+                    </MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

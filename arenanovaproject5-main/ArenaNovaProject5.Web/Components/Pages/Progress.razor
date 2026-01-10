@@ -1,0 +1,91 @@
+@page "/progress"
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+    <MudText Typo="Typo.h4">Progress</MudText>
+    <MudText Typo="Typo.body2" Class="muted">Learning progress details (mock).</MudText>
+
+    <div class="spacer"></div>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="8">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Daily Study Time</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Last 7 days</MudText>
+
+                    <div class="spacer"></div>
+
+                    <MudChart ChartType="ChartType.Line" ChartSeries="@StudySeries" XAxisLabels="@Days" Height="260px" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Weekly Completion</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Targets (mock)</MudText>
+
+                    <div class="spacer"></div>
+
+                    <MudText Typo="Typo.caption" Class="muted">Lessons</MudText>
+                    <MudProgressLinear Value="60" Rounded="true" Color="Color.Primary" />
+
+                    <div class="spacer"></div>
+
+                    <MudText Typo="Typo.caption" Class="muted">Quizzes</MudText>
+                    <MudProgressLinear Value="75" Rounded="true" Color="Color.Info" />
+
+                    <div class="spacer"></div>
+
+                    <MudText Typo="Typo.caption" Class="muted">Achievements</MudText>
+                    <MudProgressLinear Value="40" Rounded="true" Color="Color.Success" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Subject Progress</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Mock table</MudText>
+
+                    <div class="spacer"></div>
+
+                    <MudTable Dense="true" Elevation="0" Items="@Rows" Class="table">
+                        <HeaderContent>
+                            <MudTh>Subject</MudTh>
+                            <MudTh align="right">Progress</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.Name</MudTd>
+                            <MudTd align="right" style="min-width:220px;">
+                                <MudProgressLinear Value="@context.Progress" Rounded="true" Color="Color.Primary" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private string[] Days = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+    private List<ChartSeries> StudySeries = new()
+    {
+        new ChartSeries { Name = "Study (min)", Data = new double[] { 32, 41, 38, 46, 40, 25, 20 } }
+    };
+
+    private List<Row> Rows = new()
+    {
+        new Row("Math", 78),
+        new Row("English", 62),
+        new Row("Science", 55),
+        new Row("Logic", 70),
+    };
+
+    private record Row(string Name, double Progress);
+}

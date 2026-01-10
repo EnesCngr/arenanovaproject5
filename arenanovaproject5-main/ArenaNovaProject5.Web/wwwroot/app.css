@@ -450,3 +450,73 @@ table th:first-child {
   font-weight: 600;
 }
 
+/* =========================
+   NAV MENU - FINAL (GLOBAL)
+   ========================= */
+
+.topnav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12) !important;
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 50 !important;
+}
+
+/* üst mavi header ile menu arası boşluk + genişlik hissi */
+.topnav-inner {
+  padding: 18px 26px 12px !important;
+}
+
+/* yan yana tek satır */
+.topnav-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 28px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* menu item */
+.topnav-link {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+
+  padding: 14px 14px !important;
+  border-radius: 10px !important;
+
+  font-size: 16px !important;
+  font-weight: 500 !important;
+
+  text-decoration: none !important;
+  color: inherit !important;
+  opacity: 0.92 !important;
+
+  z-index: 60 !important;
+}
+
+.topnav-link:hover {
+  opacity: 1 !important;
+}
+
+/* icon */
+.nav-ic {
+  font-size: 22px !important;
+  opacity: 0.9 !important;
+}
+
+/* aktif underline: linkin içinde -> kesin görünür */
+.topnav-link.is-active::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: 2px !important;
+
+  height: 3px !important;
+  border-radius: 999px !important;
+  background: #1f6fff !important;
+
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
