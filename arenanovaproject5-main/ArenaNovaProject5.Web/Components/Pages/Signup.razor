@@ -1,55 +1,165 @@
 ﻿@page "/signup"
 @layout ArenaNovaProject5.Web.Components.Layout.PublicLayout
-@using Microsoft.AspNetCore.Authorization
-@attribute [AllowAnonymous]
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ArenaNovaProject5.Web.Services
+@using MudBlazor
+
+@inject FirebaseAuthService FirebaseAuth
+@inject AuthSessionService Session
+@inject FirebaseAuthStateProvider AuthState
+@inject NavigationManager Nav
 
 <PageTitle>Sign Up</PageTitle>
 
-<div class="container mt-4">
-    <h2>Registration Form</h2>
-    
-    @if (!string.IsNullOrEmpty(message))
-    {
-        <div class="alert @(isSuccess ? "alert-success" : "alert-danger")" role="alert">
-            @message
+<MudContainer MaxWidth="MaxWidth.Small"
+              Class="d-flex justify-center align-center"
+              Style="min-height: calc(100vh - 64px); padding-top:24px; padding-bottom:24px;">
+
+    <MudPaper Elevation="10" Class="pa-6" Style="width:100%; border-radius:18px;">
+        <div class="mb-4">
+            <MudText Typo="Typo.h5" Style="font-weight:700;">Create your parent account</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.75;">
+                Register once to access the parental dashboard.
+            </MudText>
         </div>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-3">
+                @Error
+            </MudAlert>
+        }
+
+        <EditForm Model="@FormModel" OnValidSubmit="@HandleSignup">
+            <DataAnnotationsValidator />
+
+            <MudTextField @bind-Value="FormModel.FullName"
+                          Label="Full name"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.Email"
+                          Label="Email"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="InputType.Email"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.Password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.ConfirmPassword"
+                          Label="Confirm password"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          FullWidth="true"
+                          Class="mb-2" />
+
+            <div class="d-flex justify-space-between align-center mt-3" style="gap:12px;">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Disabled="@IsBusy"
+                           OnClick="@TogglePassword">
+                    @(_showPassword ? "Hide" : "Show")
+                </MudButton>
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@IsBusy"
+                           Size="Size.Large">
+                    @(IsBusy ? "Creating..." : "Create account")
+                </MudButton>
+            </div>
+        </EditForm>
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex justify-center align-center" style="gap:10px;">
+            <MudText Typo="Typo.body2" Style="opacity:.75;">Already have an account?</MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@GoToLogin">
+                Sign in
+            </MudButton>
+        </div>
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+    private bool _showPassword;
+    private bool IsBusy;
+    private string? Error;
+
+    private SignupFormModel FormModel { get; set; } = new();
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task HandleSignup()
+    {
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            if (FormModel.Password != FormModel.ConfirmPassword)
+            {
+                Error = "Passwords do not match.";
+                return;
+            }
+
+            var res = await FirebaseAuth.SignUpAsync(FormModel.Email, FormModel.Password);
+
+            if (res is null || string.IsNullOrWhiteSpace(res.IdToken))
+            {
+                Error = "Registration failed. Please try again.";
+                return;
+            }
+
+            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? FormModel.Email);
+            AuthState.NotifyAuthChanged();
+
+            Nav.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
-    <div id="modal-signup" class="modals">
-        <div class="modal-content">
-            <form id="signup-form" @onsubmit="HandleSignUp" @onsubmit:preventDefault="true">
-               
-                <div class="mb-3">
-                    <label for="signup-fullname" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="signup-fullname" 
-                           @bind="fullName" placeholder="Full Name" required />
-                </div>
-       
-                <div class="mb-3">
-                    <label for="signup-email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="signup-email" 
-                           @bind="email" placeholder="Email" required />
-                </div>
+    private void GoToLogin() => Nav.NavigateTo("/login");
 
-                <div class="mb-3">
-                    <label for="signup-password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="signup-password" 
-                           @bind="password" placeholder="Password" required />
-                </div>
-                
-                <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                    @if (isLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        <span>Signing Up...</span>
-                    }
-                    else
-                    {
-                        <span>Sign Up</span>
-                    }
-                </button>
-            </form>
-        </div>  
-    </div>
-</div>
+    private sealed class SignupFormModel
+    {
+        [Required, MinLength(2)]
+        public string FullName { get; set; } = "";
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

@@ -457,3 +457,127 @@ table th:first-child {
 .features::before { 
   content: none !important; 
 }
+
+.login-shell {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.login-grid {
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.15);
+}
+
+.brand-panel {
+  background: linear-gradient(135deg, rgba(60, 125, 255, 0.95), rgba(140, 70, 255, 0.95));
+  color: white;
+  padding: 42px;
+}
+
+.brand-inner { max-width: 420px; }
+
+.brand-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.brand-title {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.brand-subtitle {
+  margin: 0;
+  opacity: 0.92;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.brand-points {
+  margin-top: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.point {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.14);
+}
+
+.brand-footer {
+  margin-top: 26px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-panel {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
+  padding: 42px;
+  min-width: 0;
+}
+
+.form-card {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 18px;
+  padding: 28px;
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.form-header { display: grid; gap: 6px; }
+.form-title { font-weight: 700; }
+.muted { opacity: 0.75; }
+
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-btn { min-width: 170px; }
+
+.bottom-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 960px) {
+  .brand-panel, .form-panel { padding: 24px; }
+  .brand-title { font-size: 28px; }
+  .login-shell { min-height: auto; }
+}
+
+/* Ensure MudBlazor inputs don't collapse inside the auth card */
+.form-card .mud-input-control,
+.form-card .mud-input-control-input-container,
+.form-card .mud-input,
+.form-card .mud-input-slot {
+  width: 100%;
+}
+/* =========================
+   END OF FILE
+   ========================= */
+
