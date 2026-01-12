@@ -19,10 +19,15 @@ public class AuthSessionService
 
     public void Clear()
     {
+        
         IdToken = null;
         RefreshToken = null;
         Email = null;
+        
     }
+
+    public void ClearSession() => Clear();
+
 
     public ClaimsPrincipal ToPrincipal()
     {
