@@ -1,0 +1,33 @@
+.kidlogin-shell{
+    padding-top: 32px;
+    padding-bottom: 32px;
+}
+
+.kidlogin-card{
+    border-radius: 18px;
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.kidlogin-title{
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.kidlogin-subtitle{
+    margin-top: 6px;
+    opacity: .8;
+}
+
+.kidlogin-actions{
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.kidlogin-hint{
+    opacity: .75;
+    font-size: 0.95rem;
+}

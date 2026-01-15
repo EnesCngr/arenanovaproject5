@@ -1,0 +1,129 @@
+
+@page "/kid"
+@using MudBlazor
+@inject NavigationManager Nav
+@inject ArenaNovaProject5.Web.Services.KidSessionService KidSession
+
+@if (!KidSession.IsKidAuthenticated)
+{
+    <MudContainer MaxWidth="MaxWidth.Small" Class="pa-6">
+        <MudPaper Class="pa-6" Elevation="0">
+            <MudText>Bu sayfa için Kid Login gerekli.</MudText>
+
+            <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/kid/login">
+                    Go to Kid login
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined" Href="/dashboard">
+                    Back to parent Monitor
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="kid-shell">
+
+        <MudPaper Class="kid-header pa-5" Elevation="0">
+            <div class="kid-header-row">
+                <div>
+                    <MudText Class="kid-title">🎮 Kid Mode</MudText>
+                    <MudText Class="kid-subtitle">
+                        Welcome <b>@ActiveChildName</b> - Choose a game to play!
+                    </MudText>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <MudButton Variant="Variant.Outlined" Href="/dashboard">
+                        Back to Dashboard
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="@Logout">
+                        Logout
+                    </MudButton>
+                </div>
+            </div>
+        </MudPaper>
+
+        <MudGrid Class="mt-4">
+            @foreach (var g in Games)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Class="game-card pa-5" Elevation="0">
+                        <div class="game-top">
+                            <MudText Class="game-emoji">@g.Emoji</MudText>
+                            <div class="game-meta">
+                                <MudText Class="game-title">@g.Title</MudText>
+                                <MudText Class="game-desc">@g.Desc</MudText>
+                            </div>
+                        </div>
+
+                        <div class="game-bottom">
+                            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
+                                @g.Skill
+                            </MudChip>
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Secondary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => StartGame(g.Title))">
+                                Start
+                            </MudButton>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+
+        <MudPaper Class="kid-footer pa-4 mt-4" Elevation="0">
+            <MudText Class="kid-footer-text">
+                Tip: Today, if you play 2 games, you'll earn a badge ⭐
+            </MudText>
+        </MudPaper>
+
+    </MudContainer>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!KidSession.IsKidAuthenticated)
+            Nav.NavigateTo("/kid/login");
+    }
+
+    private string ActiveChildName =>
+        KidSession.ActiveChildId switch
+        {
+            1 => "Alex",
+            2 => "Renzo",
+            3 => "Nathan",
+            _ => "Child"
+        };
+
+    private readonly List<GameCard> Games = new()
+    {
+        new("🧠", "Memory Match", ".", "Memory"),
+        new("➕", "Math Sprint", ".", "Math"),
+        new("🔤", "Word Builder", ".", "Language"),
+        new("🧩", "Logic Maze", ".", "Logic"),
+        new("🎯", "Focus Challenge", ".", "Focus"),
+        new("📚", "Reading Quest", ".", "Reading"),
+    };
+
+    private void StartGame(string title)
+    {
+        // Demo for now
+        Nav.NavigateTo($"/kid?game={Uri.EscapeDataString(title)}");
+    }
+
+    private void Logout()
+    {
+        KidSession.Logout();
+        Nav.NavigateTo("/kid/login");
+    }
+
+    private record GameCard(string Emoji, string Title, string Desc, string Skill);
+}

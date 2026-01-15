@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,7 +9,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
 
-    <!-- ✅ net8: Assets helper yok, normal yollar -->
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="ArenaNovaProject5.Web.styles.css" />
@@ -22,41 +22,41 @@
 </head>
 
 <body>
-   <CascadingAuthenticationState>
-    <Routes />
-     </CascadingAuthenticationState>
-     
+    <CascadingAuthenticationState>
+        <!-- KRİTİK: tüm sayfalar interactive -->
+        <Routes @rendermode="InteractiveServer" />
+    </CascadingAuthenticationState>
+
     <script src="_framework/blazor.web.js"></script>
 
     <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-  import { getStorage } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDX_ypE-DlpBlpn-iSWOqre8Yn2v22_56Q",
-    authDomain: "project5-arenanova.firebaseapp.com",
-    projectId: "project5-arenanova",
-    storageBucket: "project5-arenanova.firebasestorage.app",
-    messagingSenderId: "119329144836",
-    appId: "1:119329144836:web:748f91acd25ee91ec2b551",
-    measurementId: "G-0D5RGT2P0H"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyDX_ypE-DlpBlpn-iSWOqre8Yn2v22_56Q",
+            authDomain: "project5-arenanova.firebaseapp.com",
+            projectId: "project5-arenanova",
+            storageBucket: "project5-arenanova.firebasestorage.app",
+            messagingSenderId: "119329144836",
+            appId: "1:119329144836:web:748f91acd25ee91ec2b551",
+            measurementId: "G-0D5RGT2P0H"
+        };
 
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
 
-  window.firebaseApp = app;
-  window.firebaseAuth = auth;
-  window.firebaseDB = db;
-  window.firebaseStorage = storage;
-</script>
+        window.firebaseApp = app;
+        window.firebaseAuth = auth;
+        window.firebaseDB = db;
+        window.firebaseStorage = storage;
+    </script>
 
     <script type="module" src="js/firebase-helper.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
