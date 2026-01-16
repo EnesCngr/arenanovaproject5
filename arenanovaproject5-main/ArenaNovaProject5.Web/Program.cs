@@ -23,6 +23,8 @@ builder.Services.AddSingleton<AuthSessionService>();
 builder.Services.AddScoped<FirebaseAuthStateProvider>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(sp => sp.GetRequiredService<FirebaseAuthStateProvider>());
 
+// Register App State Service (for storing Firebase data)
+builder.Services.AddScoped<AppStateService>();
 
 // Register Memory Cache
 builder.Services.AddMemoryCache();
@@ -36,7 +38,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 

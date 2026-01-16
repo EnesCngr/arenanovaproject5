@@ -5,12 +5,15 @@
 
 @using System.ComponentModel.DataAnnotations
 @using ArenaNovaProject5.Web.Services
+@using ArenaNovaProject5.Web.models
 @using MudBlazor
 
 @inject FirebaseAuthService FirebaseAuth
 @inject AuthSessionService Session
 @inject FirebaseAuthStateProvider AuthState
 @inject NavigationManager Nav
+@inject FirebaseService Firebase
+@inject AppStateService AppState
 
 <PageTitle>Login</PageTitle>
 
@@ -34,7 +37,6 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           Required="true"
-                          InputType="InputType.Email"
                           FullWidth="true"
                           Class="mb-3" />
 
@@ -77,8 +79,7 @@
 </MudContainer>
 
 @code {
-    // NOT: "Model" adını kullanmıyoruz. Login.razor dosya adı yüzünden
-    // Razor bazen "Login.Model" ambiguity (CS0229) üretiyor.
+  
     private LoginFormModel FormModel { get; set; } = new();
 
     private bool IsBusy;
@@ -102,8 +103,20 @@
                 return;
             }
 
-            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? FormModel.Email);
+            // Set session in C#
+            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? FormModel.Email, res.LocalId);
             AuthState.NotifyAuthChanged();
+
+            // IMPORTANT: Also sign in through JavaScript Firebase SDK so Firestore requests are authenticated
+            try
+            {
+                await Firebase.SignInAsync(FormModel.Email, FormModel.Password);
+            }
+            catch (Exception jsEx)
+            {
+                Console.WriteLine($"JavaScript Firebase sign-in warning: {jsEx.Message}");
+                // Continue anyway - REST API auth succeeded
+            }
 
             var target = string.IsNullOrWhiteSpace(returnUrl) ? "/dashboard" : "/" + returnUrl.TrimStart('/');
             Nav.NavigateTo(target);
@@ -118,11 +131,12 @@
         }
     }
 
+  
     private void GoToSignup() => Nav.NavigateTo("/signup");
 
     private sealed class LoginFormModel
     {
-        [Required, EmailAddress]
+        [Required]
         public string Email { get; set; } = "";
 
         [Required, MinLength(6)]

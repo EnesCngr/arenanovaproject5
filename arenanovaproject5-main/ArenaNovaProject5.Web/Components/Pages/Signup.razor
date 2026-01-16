@@ -11,6 +11,8 @@
 @inject AuthSessionService Session
 @inject FirebaseAuthStateProvider AuthState
 @inject NavigationManager Nav
+@inject FirebaseService FirebaseService
+@inject IJSRuntime JS
 
 <PageTitle>Sign Up</PageTitle>
 
@@ -52,6 +54,7 @@
                           InputType="InputType.Email"
                           FullWidth="true"
                           Class="mb-3" />
+
 
             <MudTextField @bind-Value="FormModel.Password"
                           Label="Password"
@@ -102,13 +105,22 @@
 </MudContainer>
 
 @code {
-    private bool _showPassword;
-    private bool IsBusy;
-    private string? Error;
-
     private SignupFormModel FormModel { get; set; } = new();
+    private string? Error { get; set; }
+    private bool IsBusy { get; set; }
+    private bool _showPassword = false;
 
-    private void TogglePassword() => _showPassword = !_showPassword;
+    
+
+    private void TogglePassword()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo("/login");
+    }
 
     private async Task HandleSignup()
     {
@@ -117,28 +129,78 @@
 
         try
         {
+            await JS.InvokeVoidAsync("console.log", "Starting registration...");
+
             if (FormModel.Password != FormModel.ConfirmPassword)
             {
                 Error = "Passwords do not match.";
                 return;
             }
 
-            var res = await FirebaseAuth.SignUpAsync(FormModel.Email, FormModel.Password);
-
-            if (res is null || string.IsNullOrWhiteSpace(res.IdToken))
+            if (FormModel.Password.Length < 6)
             {
-                Error = "Registration failed. Please try again.";
+                Error = "Password must be at least 6 characters long.";
                 return;
             }
 
-            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? FormModel.Email);
-            AuthState.NotifyAuthChanged();
+            await JS.InvokeVoidAsync("console.log", $"Creating user: {FormModel.Email}");
 
-            Nav.NavigateTo("/dashboard");
+            // Create Firebase Auth account
+            var result = await FirebaseAuth.SignUpAsync(FormModel.Email, FormModel.Password);
+            
+            if (result == null || string.IsNullOrEmpty(result.LocalId))
+            {
+                Error = "Registration failed. Please try again.";
+                await JS.InvokeVoidAsync("console.error", "Auth failed");
+                return;
+            }
+
+            await JS.InvokeVoidAsync("console.log", $"Auth successful! UID: {result.LocalId}");
+
+            // Sign in through JavaScript SDK for Firestore access
+            await JS.InvokeVoidAsync("console.log", "Signing in through JavaScript SDK...");
+            try
+            {
+                await FirebaseService.SignInAsync(FormModel.Email, FormModel.Password);
+                await JS.InvokeVoidAsync("console.log", "JavaScript SDK sign-in successful");
+            }
+            catch (Exception jsEx)
+            {
+                Error = $"Account created but JavaScript sign-in failed: {jsEx.Message}";
+                await JS.InvokeVoidAsync("console.error", $"JS SDK sign-in error: {jsEx.Message}");
+                return;
+            }
+
+            // Save user data to Firestore
+            var userData = new{
+                uid = result.LocalId,
+                email = result.Email,
+                fullName = FormModel.FullName,
+                role = "parent",
+                createdAt = DateTime.UtcNow.ToString("o")
+            };
+
+            await JS.InvokeVoidAsync("console.log", "Saving to Firestore...");
+
+            var firestoreResult = await FirebaseService.SetDocumentAsync("users", result.LocalId, userData);
+
+            if (!firestoreResult.Success)
+            {
+                Error = $"Auth created but Firestore failed: {firestoreResult.Error}";
+                await JS.InvokeVoidAsync("console.error", $"Firestore error: {firestoreResult.Error}");
+                return;
+            }
+
+            await JS.InvokeVoidAsync("console.log", $"Registration Successful! Welcome, {FormModel.FullName}!");
+
+            // Set session and navigate
+            Session.SetSession(result.IdToken, result.RefreshToken, result.Email, result.LocalId);
+            Nav.NavigateTo("/dashboard", forceLoad: true);
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            Error = $"Error: {ex.Message}";
+            await JS.InvokeVoidAsync("console.error", $"Exception: {ex.Message}");
         }
         finally
         {
@@ -146,20 +208,22 @@
         }
     }
 
-    private void GoToLogin() => Nav.NavigateTo("/login");
-
-    private sealed class SignupFormModel
+    public class SignupFormModel
     {
-        [Required, MinLength(2)]
-        public string FullName { get; set; } = "";
+        [Required(ErrorMessage = "Full name is required")]
+        public string FullName { get; set; } = string.Empty;
 
-        [Required, EmailAddress]
-        public string Email { get; set; } = "";
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
 
-        [Required, MinLength(6)]
-        public string Password { get; set; } = "";
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+        public string Password { get; set; } = string.Empty;
 
-        [Required, MinLength(6)]
-        public string ConfirmPassword { get; set; } = "";
+        [Required(ErrorMessage = "Please confirm your password")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }
+

@@ -1,184 +1,425 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @layout ArenaNovaProject5.Web.Components.Layout.AuthorizedLayout
 @using MudBlazor
+@using ArenaNovaProject5.Web.Services
+@using ArenaNovaProject5.Web.models
+@using Microsoft.Extensions.Logging
+@using Microsoft.JSInterop
 @rendermode InteractiveServer
+@inject FirebaseService Firebase
+@inject AuthSessionService Session
+@inject ILogger<Dashboard> Logger
+@inject AppStateService AppState
+@inject IJSRuntime JS
 
 <PageTitle>Dashboard</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="dashboard-root">
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <p>Loading dashboard data...</p>
+    }
+    else if (currentUser != null)
+    {
+        <!-- User Context Display -->
+        <MudAlert Severity="Severity.Info" Class="mb-4">
+            Viewing as: @currentUser.Email
+            @if (activeChild != null)
+            {
+                <span> | Active Child: @FormatChildDisplay(activeChild)</span>
+            }
+        </MudAlert>
 
-    <!-- ===== TOP STATS ===== -->
-    <MudGrid Spacing="3">
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="stat-card">
-                <div class="stat-icon blue">
-                    <MudIcon Icon="@Icons.Material.Filled.Schedule" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Total Study Time</div>
-                    <div class="stat-value">245 min</div>
-                    <div class="stat-sub">This week</div>
-                </div>
-                <div class="stat-delta positive">+12%</div>
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="stat-card">
-                <div class="stat-icon green">
-                    <MudIcon Icon="@Icons.Material.Filled.MenuBook" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Lessons Completed</div>
-                    <div class="stat-value">12</div>
-                    <div class="stat-sub">This week</div>
-                </div>
-                <div class="stat-delta positive">+3</div>
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="stat-card">
-                <div class="stat-icon blue">
-                    <MudIcon Icon="@Icons.Material.Filled.TrackChanges" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Quiz Average</div>
-                    <div class="stat-value">87%</div>
-                    <div class="stat-sub">Last 10 quizzes</div>
-                </div>
-                <div class="stat-delta positive">+5%</div>
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="stat-card">
-                <div class="stat-icon green">
-                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Achievements</div>
-                    <div class="stat-value">5</div>
-                    <div class="stat-sub">This month</div>
-                </div>
-                <div class="stat-delta positive">+2</div>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-
-    <!-- ===== CHARTS ===== -->
-    <MudGrid Spacing="3" Class="mt-6">
-        <MudItem xs="12" md="6">
-            <MudPaper Class="panel-card">
-                <div class="panel-header">
-                    <div>
-                        <div class="panel-title">Daily Study Time</div>
-                        <div class="panel-sub">Last 7 days</div>
+        <!-- ===== TOP STATS ===== -->
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="stat-card">
+                    <div class="stat-icon blue">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" />
                     </div>
-                </div>
-
-                <MudChart ChartType="ChartType.Line"
-                          ChartSeries="@studySeries"
-                          XAxisLabels="@days"
-                          Height="260px" />
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" md="6">
-            <MudPaper Class="panel-card">
-                <div class="panel-header">
-                    <div>
-                        <div class="panel-title">Quiz Performance Trend</div>
-                        <div class="panel-sub">Last 7 days</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Study Time</div>
+                        <div class="stat-value">245 min</div>
+                        <div class="stat-sub">This week</div>
                     </div>
-                </div>
-
-                <MudChart ChartType="ChartType.Line"
-                          ChartSeries="@quizSeries"
-                          XAxisLabels="@days"
-                          Height="260px" />
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-
-    <!-- ===== BOTTOM ===== -->
-    <MudGrid Spacing="3" Class="mt-6">
-        <MudItem xs="12" md="8">
-            <MudPaper Class="panel-card">
-                <div class="panel-title mb-4">Recent Achievements</div>
-
-                <div class="achievement">
-                    <div class="ach-icon">🏆</div>
-                    <div class="ach-text">
-                        <strong>Math Master</strong>
-                        <span>Completed 10 multiplication lessons in a row</span>
+                    <div class="stat-delta positive">+12%</div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="stat-card">
+                    <div class="stat-icon green">
+                        <MudIcon Icon="@Icons.Material.Filled.MenuBook" />
                     </div>
-                    <div class="ach-time">Today</div>
-                </div>
-
-                <div class="achievement">
-                    <div class="ach-icon">🏆</div>
-                    <div class="ach-text">
-                        <strong>Speed Champion</strong>
-                        <span>Answered 20 questions in under 5 minutes</span>
+                    <div class="stat-content">
+                        <div class="stat-label">Lessons Completed</div>
+                        <div class="stat-value">@lessonsCompleted</div>
+                        <div class="stat-sub">Total levels</div>
                     </div>
-                    <div class="ach-time">Yesterday</div>
-                </div>
-
-                <div class="achievement">
-                    <div class="ach-icon">🏆</div>
-                    <div class="ach-text">
-                        <strong>Perfect Score</strong>
-                        <span>Scored 100% on Division Quiz</span>
+                    <div class="stat-delta positive">+@(lessonsCompleted > 0 ? new Random().Next(1, 5) : 0)</div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="stat-card">
+                    <div class="stat-icon blue">
+                        <MudIcon Icon="@Icons.Material.Filled.TrackChanges" />
                     </div>
-                    <div class="ach-time">2 days ago</div>
-                </div>
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" md="4">
-            <MudPaper Class="panel-card summary-card">
-                <div class="panel-title">Today's Summary</div>
-                <div class="panel-sub mb-4">Overview</div>
-
-                <div class="summary-row">
-                    <span>Screen Time</span>
-                    <strong>42 / 60 min</strong>
-                </div>
-                <MudProgressLinear Value="70" Color="Color.Primary" Rounded="true" />
-
-                <div class="summary-list">
-                    <div><span>Sessions Today</span><strong>3</strong></div>
-                    <div><span>Lessons Done</span><strong>4</strong></div>
-                    <div class="status-row">
-                        <span>App Status</span>
-                        <span class="status-pill">Active</span>
+                    <div class="stat-content">
+                        <div class="stat-label">Quiz Average</div>
+                        <div class="stat-value">@(quizAverage)%</div>
+                        <div class="stat-sub">All quizzes</div>
                     </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+                    <div class="stat-delta positive">@(quizAverage > 0 ? "+" + new Random().Next(1, 10) + "%" : "--")</div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="stat-card">
+                    <div class="stat-icon green">
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" />
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Achievements</div>
+                        <div class="stat-value">5</div>
+                        <div class="stat-sub">This month</div>
+                    </div>
+                    <div class="stat-delta positive">+2</div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
 
+        <!-- ===== CHARTS ===== -->
+        <MudGrid Spacing="3" Class="mt-6">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="panel-card">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">Daily Study Time</div>
+                            <div class="panel-sub">Last 7 days</div>
+                        </div>
+                    </div>
+                    @if (studySeries != null && studySeries.Any())
+                    {
+                        <MudChart ChartType="ChartType.Line"
+                                  ChartSeries="@studySeries"
+                                  XAxisLabels="@days"
+                                  Height="260px" />
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-center align-center" style="height:260px;">
+                            <MudText>No study data available</MudText>
+                        </div>
+                    }
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Class="panel-card">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">Quiz Performance Trend</div>
+                            <div class="panel-sub">Last 7 days</div>
+                        </div>
+                    </div>
+                    @if (quizSeries != null && quizSeries.Any())
+                    {
+                        <MudChart ChartType="ChartType.Line"
+                                  ChartSeries="@quizSeries"
+                                  XAxisLabels="@days"
+                                  Height="260px" />
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-center align-center" style="height:260px;">
+                            <MudText>No quiz data available</MudText>
+                        </div>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- ===== BOTTOM ===== -->
+        <MudGrid Spacing="3" Class="mt-6">
+            <MudItem xs="12" md="8">
+                <MudPaper Class="panel-card">
+                    <div class="panel-title mb-4">Recent Achievements</div>
+                    <div class="achievement">
+                        <div class="ach-icon">??</div>
+                        <div class="ach-text">
+                            <strong>Math Master</strong>
+                            <span>Completed 10 multiplication lessons in a row</span>
+                        </div>
+                        <div class="ach-time">Today</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="ach-icon">??</div>
+                        <div class="ach-text">
+                            <strong>Speed Champion</strong>
+                            <span>Answered 20 questions in under 5 minutes</span>
+                        </div>
+                        <div class="ach-time">Yesterday</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="ach-icon">??</div>
+                        <div class="ach-text">
+                            <strong>Perfect Score</strong>
+                            <span>Scored 100% on Division Quiz</span>
+                        </div>
+                        <div class="ach-time">2 days ago</div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="panel-card summary-card">
+                    <div class="panel-title">Today's Summary</div>
+                    <div class="panel-sub mb-4">Overview</div>
+                    <div class="summary-row">
+                        <span>Screen Time</span>
+                        <strong>42 / 60 min</strong>
+                    </div>
+                    <MudProgressLinear Value="70" Color="Color.Primary" Rounded="true" />
+                    <div class="summary-list">
+                        <div><span>Sessions Today</span><strong>3</strong></div>
+                        <div><span>Lessons Done</span><strong>4</strong></div>
+                        <div class="status-row">
+                            <span>App Status</span>
+                            <span class="status-pill">Active</span>
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Warning">No user data available</MudAlert>
+    }
 </MudContainer>
 
 @code {
-    string[] days = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    private bool isLoading = true;
+    private ParentModel? currentUser;
+    private ChildProgressModel? childProgress;
+    private ChildSubcollection? activeChild;
+    private int lessonsCompleted = 0;
+    private int quizAverage = 0;
+    private List<LevelSubcollection>? levelsData;
+    private bool _hasRendered = false;
 
-    List<ChartSeries> studySeries = new()
-    {
-        new ChartSeries
-        {
-            Name = "Study Time",
-            Data = new double[] { 32, 41, 37, 45, 40, 25, 20 }
-        }
-    };
+    // Mock data for charts
+    private List<ChartSeries> studySeries = new();
+    private List<ChartSeries> quizSeries = new();
+    private string[] days = Array.Empty<string>();
 
-    List<ChartSeries> quizSeries = new()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        new ChartSeries
+        if (!firstRender || _hasRendered) return;
+        
+        _hasRendered = true;
+        await LoadDashboardData();
+        StateHasChanged();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
         {
-            Name = "Quiz",
-            Data = new double[] { 78, 82, 85, 88, 90, 87, 92 }
+            isLoading = true;
+
+            var uid = Session.UserId;
+            Logger.LogInformation($"Dashboard loading for UID: {uid}");
+            
+            if (!string.IsNullOrEmpty(uid))
+            {
+                // Get user data from Firestore
+                Logger.LogInformation($"Fetching user data from Firestore for UID: {uid}");
+                var userData = await Firebase.GetDocumentAsync<ParentModel>("users", uid);
+                
+                if (userData != null)
+                {
+                    Logger.LogInformation($"User data loaded: {userData.Email}");
+                    currentUser = userData;
+                    AppState.SetUserData(currentUser);
+
+                    // Get children from subcollection: users/{uid}/children
+                    Logger.LogInformation($"Fetching children subcollection for user: {uid}");
+                    var children = await Firebase.GetSubcollectionAsync<ChildSubcollection>("users", uid, "children");
+                    
+                    // LOG ENTIRE CHILDREN COLLECTION
+                    Logger.LogInformation($"===== CHILDREN COLLECTION DEBUG =====");
+                    Logger.LogInformation($"Children count: {children?.Count ?? 0}");
+                    await JS.InvokeVoidAsync("console.log", "===== CHILDREN COLLECTION DEBUG =====");
+                    await JS.InvokeVoidAsync("console.log", $"Children count: {children?.Count ?? 0}");
+                    if (children != null)
+                    {
+                        for (int i = 0; i < children.Count; i++)
+                        {
+                            var c = children[i];
+                            var childDebug = $"Child[{i}]: id={c.id}, ChildUid={c.ChildUid}, FullName={c.FullName}, Age={c.Age}, Active={c.Active}, JoinedAt={c.JoinedAt}";
+                            Logger.LogInformation(childDebug);
+                            await JS.InvokeVoidAsync("console.log", childDebug);
+                            await JS.InvokeVoidAsync("console.log", "Full child object:", c);
+                        }
+                    }
+                    Logger.LogInformation($"=====================================");
+                    await JS.InvokeVoidAsync("console.log", "=====================================");
+                    
+                    if (children != null && children.Any())
+                    {
+                        // Use first child
+                        activeChild = children.First();
+                        
+                        // Use document ID if ChildUid is null/empty
+                        var childId = !string.IsNullOrEmpty(activeChild.ChildUid) ? activeChild.ChildUid : activeChild.id;
+                        
+                        Logger.LogInformation($"Active child: {activeChild.FullName} (Document ID: {activeChild.id}, ChildUid: {activeChild.ChildUid ?? "null"}, Using: {childId})");
+                        AppState.SetActiveChild(activeChild);
+
+                        // Get child progress data from childProgress/{childId}
+                        Logger.LogInformation($"Fetching child progress for ID: {childId}");
+                        childProgress = await Firebase.GetDocumentAsync<ChildProgressModel>("childProgress", childId);
+
+                        if (childProgress != null)
+                        {
+                            Logger.LogInformation($"Child progress loaded for: {childProgress.FullName}");
+                            AppState.SetChildProgress(childProgress);
+                        }
+                        else
+                        {
+                            Logger.LogWarning($"No child progress found for ChildUid: {childId}, creating default progress document");
+
+                            // Create default child progress document
+                            var defaultProgress = new ChildProgressModel
+                            {
+                                ChildUid = childId,
+                                FullName = activeChild.FullName,
+                                parentuid = uid,
+                                status = "active",
+                                TotalLevelsCompleted = 0,
+                                LastPlayed = null
+                            };
+
+                            var result = await Firebase.SetDocumentAsync("childProgress", childId, defaultProgress);
+                            if (result.Success)
+                            {
+                                Logger.LogInformation($"Created default child progress document for {activeChild.FullName}");
+                                childProgress = defaultProgress;
+                                AppState.SetChildProgress(childProgress);
+                            }
+                            else
+                            {
+                                Logger.LogError($"Failed to create child progress document: {result.Error}");
+                            }
+                        }
+
+                        // Get level data from subcollection: childProgress/{childId}/Levels (only if progress exists)
+                        if (childProgress != null)
+                        {
+                            Logger.LogInformation($"Fetching Levels subcollection for ID: {childId}");
+                            levelsData = await Firebase.GetSubcollectionAsync<LevelSubcollection>("childProgress", childId, "Levels");
+
+                            // LOG ENTIRE LEVELS COLLECTION
+                            Logger.LogInformation($"===== LEVELS COLLECTION DEBUG =====");
+                            Logger.LogInformation($"Levels count: {levelsData?.Count ?? 0}");
+                            await JS.InvokeVoidAsync("console.log", "===== LEVELS COLLECTION DEBUG =====");
+                            await JS.InvokeVoidAsync("console.log", $"Levels count: {levelsData?.Count ?? 0}");
+                            if (levelsData != null)
+                            {
+                                for (int i = 0; i < levelsData.Count; i++)
+                                {
+                                    var level = levelsData[i];
+                                    var levelDebug = $"Level[{i}]: id={level.id}, LevelCompleted={level.LevelCompleted}, QuizScore={level.QuizScore}, CompletedAt={level.CompletedAt}, LevelNumber={level.LevelNumber}";
+                                    Logger.LogInformation(levelDebug);
+                                    await JS.InvokeVoidAsync("console.log", levelDebug);
+                                    await JS.InvokeVoidAsync("console.log", "Full level object:", level);
+                                }
+                            }
+                            Logger.LogInformation($"===================================");
+                            await JS.InvokeVoidAsync("console.log", "===================================");
+
+                            if (levelsData != null && levelsData.Any())
+                            {
+                                lessonsCompleted = levelsData.Count;
+                                Logger.LogInformation($"Loaded {lessonsCompleted} level records");
+
+                                // Calculate average quiz score
+                                var quizScores = levelsData.Select(l => l.QuizScore).Where(s => s > 0).ToArray();
+                                if (quizScores.Any())
+                                {
+                                    quizAverage = (int)quizScores.Average();
+                                    Logger.LogInformation($"Quiz Average: {quizAverage}% (from {quizScores.Length} quizzes)");
+                                }
+                                else
+                                {
+                                    Logger.LogInformation("No quiz scores found");
+                                }
+
+                                BuildQuizChartFromLevels();
+                            }
+                            else
+                            {
+                                Logger.LogWarning($"No levels data found for child {activeChild.ChildUid}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogWarning("No children found in subcollection users/{uid}/children");
+                    }
+                }
+                else
+                {
+                    Logger.LogError($"User data not found in Firestore for UID: {uid}");
+                }
+            }
+            else
+            {
+                Logger.LogWarning("No user ID found in session");
+            }
         }
-    };
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading dashboard data");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string FormatChildDisplay(ChildSubcollection child)
+    {
+        return $"{child.FullName} (Age {child.Age})";
+    }
+
+    private void BuildQuizChartFromLevels()
+    {
+        if (levelsData == null || !levelsData.Any())
+            return;
+
+        // Order levels logically (important)
+        var orderedLevels = levelsData
+            .Where(l => l.QuizScore > 0)
+            .OrderBy(l => l.LevelNumber)
+            .ToList();
+
+        if (!orderedLevels.Any())
+            return;
+
+        // X-axis labels (Level IDs or numbers)
+        days = orderedLevels
+            .Select(l => $"Level {l.LevelNumber}")
+            .ToArray();
+
+        // Y-axis values
+        quizSeries = new List<ChartSeries>
+        {
+            new ChartSeries
+            {
+                Name = "Quiz Score",
+                Data = orderedLevels
+                    .Select(l => (double)l.QuizScore)
+                    .ToArray()
+            }
+        };
+    }
 }

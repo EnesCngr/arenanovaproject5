@@ -5,6 +5,42 @@
     padding: 24px 16px 80px;
 }
 
+.user-context {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(36, 99, 235, 0.08), rgba(16, 185, 129, 0.08));
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+}
+
+.user-greeting {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.user-meta {
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.child-line {
+    margin-top: 4px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.user-tags {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 /* ===== STAT CARDS ===== */
 .stats-grid {
     display: grid;
@@ -75,5 +111,14 @@
 @media (max-width: 640px) {
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .user-context {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .user-tags {
+        justify-content: flex-start;
     }
 }

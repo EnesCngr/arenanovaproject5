@@ -112,7 +112,7 @@
 
     private async Task SignUp()
     {
-        var result = await Firebase.SignUpAsync(email, password);
+        var result = await Firebase.SignUpWithResultAsync(email, password);
         if (result.Success)
         {
             authMessage = $"Successfully signed up! User ID: {result.UserId}";
