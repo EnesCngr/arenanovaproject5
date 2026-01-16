@@ -136,11 +136,14 @@
         {
             // Load all users from Firestore
             var users = await Firebase.GetCollectionAsync<UserData>("users");
-            
-            totalUsers = users.Count();
-            parentCount = users.Count(u => u.role == "parent");
-            childCount = users.Count(u => u.role == "child");
-            recentUsers = users.OrderByDescending(u => u.createdAt).Take(5).ToList();
+
+            if (users != null)
+            {
+                totalUsers = users.Count();
+                parentCount = users.Count(u => u.role == "parent");
+                childCount = users.Count(u => u.role == "child");
+                recentUsers = users.OrderByDescending(u => u.createdAt).Take(5).ToList();
+            }
             
             // Mock data for now
             gameSessions = 142;

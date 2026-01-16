@@ -31,7 +31,7 @@ namespace ArenaNovaProject5.Web.Services
         // Get user data with caching
         public async Task<object?> GetUserDataAsync(string uid)
         {
-            if (_cache.TryGetValue($"user_{uid}", out object userData))
+            if (_cache.TryGetValue($"user_{uid}", out var userData))
             {
                 return userData;
             }
@@ -48,7 +48,7 @@ namespace ArenaNovaProject5.Web.Services
         public async Task<object?> GetUserAndChildProgressAsync(string userUid, string childUid)
         {
             string cacheKey = $"progress_{userUid}_{childUid}";
-            if (_cache.TryGetValue(cacheKey, out object progressData))
+            if (_cache.TryGetValue(cacheKey, out var progressData))
             {
                 return progressData;
             }
@@ -65,7 +65,7 @@ namespace ArenaNovaProject5.Web.Services
         public async Task<object?> GetSubcollectionAsync(string parentCollection, string docId, string subcollectionName)
         {
             string cacheKey = $"subcol_{parentCollection}_{docId}_{subcollectionName}";
-            if (_cache.TryGetValue(cacheKey, out object subcolData))
+            if (_cache.TryGetValue(cacheKey, out var subcolData))
             {
                 return subcolData;
             }

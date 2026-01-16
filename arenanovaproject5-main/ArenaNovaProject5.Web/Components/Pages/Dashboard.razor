@@ -208,15 +208,26 @@
     // Mock data for charts
     private List<ChartSeries> studySeries = new();
     private List<ChartSeries> quizSeries = new();
-    private string[] days = Array.Empty<string>();
+    private string[] days = new string[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || _hasRendered) return;
         
         _hasRendered = true;
-        await LoadDashboardData();
-        StateHasChanged();
+        
+        try
+        {
+            await LoadDashboardData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Critical error in OnAfterRenderAsync");
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task LoadDashboardData()
@@ -224,61 +235,66 @@
         try
         {
             isLoading = true;
+            await InvokeAsync(StateHasChanged);
 
-            var uid = Session.UserId;
+            var uid = Session?.UserId;
+            if (string.IsNullOrEmpty(uid))
+            {
+                Logger.LogWarning("No user ID available in session");
+                return;
+            }
+            
             Logger.LogInformation($"Dashboard loading for UID: {uid}");
             
-            if (!string.IsNullOrEmpty(uid))
+            // Get user data from Firestore
+            Logger.LogInformation($"Fetching user data from Firestore for UID: {uid}");
+            var userData = await Firebase.GetDocumentAsync<ParentModel>("users", uid);
+            
+            if (userData != null)
             {
-                // Get user data from Firestore
-                Logger.LogInformation($"Fetching user data from Firestore for UID: {uid}");
-                var userData = await Firebase.GetDocumentAsync<ParentModel>("users", uid);
+                Logger.LogInformation($"User data loaded: {userData.Email}");
+                currentUser = userData;
+                AppState.SetUserData(currentUser);
+
+                // Get children from subcollection: users/{uid}/children
+                Logger.LogInformation($"Fetching children subcollection for user: {uid}");
+                var children = await Firebase.GetSubcollectionAsync<ChildSubcollection>("users", uid, "children");
                 
-                if (userData != null)
+                // LOG ENTIRE CHILDREN COLLECTION
+                Logger.LogInformation($"===== CHILDREN COLLECTION DEBUG =====");
+                Logger.LogInformation($"Children count: {children?.Count ?? 0}");
+                await JS.InvokeVoidAsync("console.log", "===== CHILDREN COLLECTION DEBUG =====");
+                await JS.InvokeVoidAsync("console.log", $"Children count: {children?.Count ?? 0}");
+                if (children != null)
                 {
-                    Logger.LogInformation($"User data loaded: {userData.Email}");
-                    currentUser = userData;
-                    AppState.SetUserData(currentUser);
-
-                    // Get children from subcollection: users/{uid}/children
-                    Logger.LogInformation($"Fetching children subcollection for user: {uid}");
-                    var children = await Firebase.GetSubcollectionAsync<ChildSubcollection>("users", uid, "children");
-                    
-                    // LOG ENTIRE CHILDREN COLLECTION
-                    Logger.LogInformation($"===== CHILDREN COLLECTION DEBUG =====");
-                    Logger.LogInformation($"Children count: {children?.Count ?? 0}");
-                    await JS.InvokeVoidAsync("console.log", "===== CHILDREN COLLECTION DEBUG =====");
-                    await JS.InvokeVoidAsync("console.log", $"Children count: {children?.Count ?? 0}");
-                    if (children != null)
+                    for (int i = 0; i < children.Count; i++)
                     {
-                        for (int i = 0; i < children.Count; i++)
-                        {
-                            var c = children[i];
-                            var childDebug = $"Child[{i}]: id={c.id}, ChildUid={c.ChildUid}, FullName={c.FullName}, Age={c.Age}, Active={c.Active}, JoinedAt={c.JoinedAt}";
-                            Logger.LogInformation(childDebug);
-                            await JS.InvokeVoidAsync("console.log", childDebug);
-                            await JS.InvokeVoidAsync("console.log", "Full child object:", c);
-                        }
+                        var c = children[i];
+                        var childDebug = $"Child[{i}]: id={c.id}, ChildUid={c.ChildUid}, FullName={c.FullName}, Age={c.Age}, Active={c.Active}, JoinedAt={c.JoinedAt}";
+                        Logger.LogInformation(childDebug);
+                        await JS.InvokeVoidAsync("console.log", childDebug);
+                        await JS.InvokeVoidAsync("console.log", "Full child object:", c);
                     }
-                    Logger.LogInformation($"=====================================");
-                    await JS.InvokeVoidAsync("console.log", "=====================================");
+                }
+                Logger.LogInformation($"=====================================");
+                await JS.InvokeVoidAsync("console.log", "=====================================");
+                
+                if (children != null && children.Any())
+                {
+                    // Use first child
+                    activeChild = children.First();
                     
-                    if (children != null && children.Any())
-                    {
-                        // Use first child
-                        activeChild = children.First();
-                        
-                        // Use document ID if ChildUid is null/empty
-                        var childId = !string.IsNullOrEmpty(activeChild.ChildUid) ? activeChild.ChildUid : activeChild.id;
-                        
-                        Logger.LogInformation($"Active child: {activeChild.FullName} (Document ID: {activeChild.id}, ChildUid: {activeChild.ChildUid ?? "null"}, Using: {childId})");
-                        AppState.SetActiveChild(activeChild);
+                    // Use document ID if ChildUid is null/empty
+                    var childId = !string.IsNullOrEmpty(activeChild.ChildUid) ? activeChild.ChildUid : activeChild.id;
 
-                        // Get child progress data from childProgress/{childId}
-                        Logger.LogInformation($"Fetching child progress for ID: {childId}");
-                        childProgress = await Firebase.GetDocumentAsync<ChildProgressModel>("childProgress", childId);
+                    Logger.LogInformation($"Active child: {activeChild.FullName} (Document ID: {activeChild.id}, ChildUid: {activeChild.ChildUid ?? "null"}, Using: {childId})");
+                    AppState.SetActiveChild(activeChild);
 
-                        if (childProgress != null)
+                    // Get child progress data from childProgress/{childId}
+                    Logger.LogInformation($"Fetching child progress for ID: {childId}");
+                    childProgress = await Firebase.GetDocumentAsync<ChildProgressModel>("childProgress", childId);
+
+                    if (childProgress != null)
                         {
                             Logger.LogInformation($"Child progress loaded for: {childProgress.FullName}");
                             AppState.SetChildProgress(childProgress);
@@ -370,11 +386,6 @@
                 {
                     Logger.LogError($"User data not found in Firestore for UID: {uid}");
                 }
-            }
-            else
-            {
-                Logger.LogWarning("No user ID found in session");
-            }
         }
         catch (Exception ex)
         {
@@ -383,6 +394,7 @@
         finally
         {
             isLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 

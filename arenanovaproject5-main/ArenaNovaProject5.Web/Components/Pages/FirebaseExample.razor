@@ -143,15 +143,22 @@
         try
         {
             var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData);
-            var result = await Firebase.SetDocumentAsync(collectionName, documentId, data);
-            
-            if (result.Success)
+            if (data != null)
             {
-                dataMessage = "Document saved successfully!";
+                var result = await Firebase.SetDocumentAsync(collectionName, documentId, data);
+
+                if (result.Success)
+                {
+                    dataMessage = "Document saved successfully!";
+                }
+                else
+                {
+                    dataMessage = $"Error: {result.Error}";
+                }
             }
             else
             {
-                dataMessage = $"Error: {result.Error}";
+                dataMessage = "Invalid JSON data";
             }
         }
         catch (Exception ex)
@@ -176,7 +183,7 @@
     private async Task LoadCollection()
     {
         var results = await Firebase.GetCollectionAsync<Dictionary<string, object>>(collectionName);
-        if (results.Any())
+        if (results != null && results.Any())
         {
             dataMessage = System.Text.Json.JsonSerializer.Serialize(results, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
