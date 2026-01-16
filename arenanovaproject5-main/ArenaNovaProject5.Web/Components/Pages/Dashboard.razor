@@ -290,9 +290,11 @@
                     Logger.LogInformation($"Active child: {activeChild.FullName} (Document ID: {activeChild.id}, ChildUid: {activeChild.ChildUid ?? "null"}, Using: {childId})");
                     AppState.SetActiveChild(activeChild);
 
-                    // Get child progress data from childProgress/{childId}
-                    Logger.LogInformation($"Fetching child progress for ID: {childId}");
-                    childProgress = await Firebase.GetDocumentAsync<ChildProgressModel>("childProgress", childId);
+                    if (!string.IsNullOrEmpty(childId))
+                    {
+                        // Get child progress data from childProgress/{childId}
+                        Logger.LogInformation($"Fetching child progress for ID: {childId}");
+                        childProgress = await Firebase.GetDocumentAsync<ChildProgressModel>("childProgress", childId);
 
                     if (childProgress != null)
                         {
