@@ -388,6 +388,11 @@
                 {
                     Logger.LogError($"User data not found in Firestore for UID: {uid}");
                 }
+            }
+            else
+            {
+                Logger.LogError($"User data not found in Firestore for UID: {uid}");
+            }
         }
         catch (Exception ex)
         {
