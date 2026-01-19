@@ -1,0 +1,45 @@
+@page "/kid/login"
+@using MudBlazor
+@inject NavigationManager Nav
+@inject ArenaNovaProject5.Web.Services.KidSessionService KidSession
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-6">
+    <MudPaper Class="pa-6" Elevation="0">
+        <MudText>🧒 Kid Login (Demo)</MudText>
+
+        <MudText Class="mt-2">
+            Choose a child profile to Login as:
+        </MudText>
+
+        <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="@(() => Login(1))">
+                Alex
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary"
+                       OnClick="@(() => Login(2))">
+                Renzo
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Tertiary"
+                       OnClick="@(() => Login(3))">
+                Enes
+            </MudButton>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudButton Variant="Variant.Outlined" Href="/dashboard">
+            Back to dashboard
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code{
+    private void Login(int childId)
+    {
+        KidSession.LoginDemo(childId);
+        Nav.NavigateTo("/kid");
+    }
+}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .page {
     position: relative;
     display: flex;
@@ -69,4 +70,16 @@ main {
     position: absolute;
     right: 0.75rem;
     top: 0.5rem;
+=======
+.navbar-header{
+    display: flex;
+    align-items: center;
+}
+
+.header-right{
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+>>>>>>> e3551f6718c5060aff08c914906add9d8d22744e
 }

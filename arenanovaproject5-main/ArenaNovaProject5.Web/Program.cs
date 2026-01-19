@@ -22,6 +22,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddSingleton<AuthSessionService>();
 builder.Services.AddScoped<FirebaseAuthStateProvider>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(sp => sp.GetRequiredService<FirebaseAuthStateProvider>());
+builder.Services.AddScoped<ArenaNovaProject5.Web.Services.KidSessionService>();
 
 // Register App State Service (for storing Firebase data)
 builder.Services.AddScoped<AppStateService>();

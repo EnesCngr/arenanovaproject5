@@ -1,7 +1,8 @@
 @using ArenaNovaProject5.Web.Services
 @using ArenaNovaProject5.Web.Components.Auth
+@using MudBlazor
+
 @inject AuthSessionService Session
-@inject NavigationManager Nav
 @inherits LayoutComponentBase
 
 @if (!Session.IsAuthenticated)
@@ -18,9 +19,23 @@ else
          <Childselector />
 
         </div>
-        
+
         <header class="navbar-header">
             <NavMenu />
+<<<<<<< HEAD
+=======
+
+            <div class="header-right">
+                <Childselector />
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           Href="/kid/login">
+                    Kid Panel
+                </MudButton>
+            </div>
+>>>>>>> e3551f6718c5060aff08c914906add9d8d22744e
         </header>
 
         <main>
