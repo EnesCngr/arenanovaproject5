@@ -139,11 +139,13 @@
             }
 
             var jsonContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Renzo response: {jsonContent.Substring(0, Math.Min(500, jsonContent.Length))}");
             using var doc = JsonDocument.Parse(jsonContent);
             var root = doc.RootElement;
 
             if (!root.TryGetProperty("documents", out var documentsArray))
             {
+                Console.WriteLine("No 'documents' property found in Renzo response");
                 // No documents found
                 RenzoChartData.Clear();
                 TotalSessions = 0;
@@ -165,16 +167,36 @@
                     // Extract rprogress value
                     if (fields.TryGetProperty("rprogress", out var rprogressValue))
                     {
+                        double value = 0;
+                        bool found = false;
+                        
+                        // Try doubleValue first
                         if (rprogressValue.TryGetProperty("doubleValue", out var doubleVal))
                         {
-                            var value = doubleVal.GetDouble();
+                            value = doubleVal.GetDouble();
+                            found = true;
+                        }
+                        // Try integerValue if double not found
+                        else if (rprogressValue.TryGetProperty("integerValue", out var intVal))
+                        {
+                            if (double.TryParse(intVal.GetString() ?? "0", out var parsedValue))
+                            {
+                                value = parsedValue;
+                                found = true;
+                            }
+                        }
+                        
+                        if (found)
+                        {
                             RenzoChartData.Add(value);
                             sessionCount++;
+                            Console.WriteLine($"Renzo session {sessionCount}: rprogress = {value}");
                         }
                     }
                 }
             }
 
+            Console.WriteLine($"Total Renzo sessions loaded: {sessionCount}");
             TotalSessions = sessionCount;
 
             if (RenzoChartData.Count > 0)
