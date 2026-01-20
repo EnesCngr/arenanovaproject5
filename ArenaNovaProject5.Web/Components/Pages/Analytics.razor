@@ -56,12 +56,6 @@
 
                         <div style="display: flex; flex-direction: column; gap: 12px;">
                             <div style="padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
-                                <MudText Typo="Typo.caption" Style="opacity: 0.75;">Highest Starting Level</MudText>
-                                <MudText Typo="Typo.h6" Style="font-weight: 700;">@HighestScore</MudText>
-                                <MudText Typo="Typo.caption" Style="opacity: 0.6;">level</MudText>
-                            </div>
-
-                            <div style="padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
                                 <MudText Typo="Typo.caption" Style="opacity: 0.75;">Total Sessions</MudText>
                                 <MudText Typo="Typo.h6" Style="font-weight: 700;">@TotalSessions</MudText>
                                 <MudText Typo="Typo.caption" Style="opacity: 0.6;">games played</MudText>
@@ -76,12 +70,10 @@
 
 @code {
     private List<double> RenzoChartData = new();
-    private List<double> StartingLevels = new();
     private List<ChartSeries> renzoChartSeries = new();
     private string[] renzoXLabels = Array.Empty<string>();
     private ChartOptions renzoChartOptions = new();
 
-    private double HighestScore = 0;
     private int TotalSessions = 0;
     
     private string? LastLoadedKidId = null;
@@ -142,9 +134,7 @@
                 Console.WriteLine("No 'documents' property found in Renzo response");
                 // No documents found
                 RenzoChartData.Clear();
-                StartingLevels.Clear();
                 TotalSessions = 0;
-                HighestScore = 0;
                 renzoChartSeries.Clear();
                 renzoXLabels = Array.Empty<string>();
                 StateHasChanged();
@@ -152,7 +142,6 @@
             }
 
             RenzoChartData.Clear();
-            StartingLevels.Clear();
             var sessionCount = 0;
 
             foreach (var docElement in documentsArray.EnumerateArray())
@@ -188,49 +177,11 @@
                             Console.WriteLine($"Renzo session {sessionCount}: rprogress = {value}");
                         }
                     }
-
-                    // Extract starting level
-                    if (fields.TryGetProperty("level", out var levelValue))
-                    {
-                        double levelNum = 0;
-                        bool found = false;
-                        
-                        // Try integerValue first
-                        if (levelValue.TryGetProperty("integerValue", out var intVal))
-                        {
-                            if (double.TryParse(intVal.GetString() ?? "0", out var parsedValue))
-                            {
-                                levelNum = parsedValue;
-                                found = true;
-                            }
-                        }
-                        // Try doubleValue
-                        else if (levelValue.TryGetProperty("doubleValue", out var doubleVal))
-                        {
-                            levelNum = doubleVal.GetDouble();
-                            found = true;
-                        }
-                        
-                        if (found)
-                        {
-                            StartingLevels.Add(levelNum);
-                            Console.WriteLine($"Renzo session {sessionCount}: level = {levelNum}");
-                        }
-                    }
                 }
             }
 
             Console.WriteLine($"Total Renzo sessions loaded: {sessionCount}");
             TotalSessions = sessionCount;
-
-            if (RenzoChartData.Count > 0)
-            {
-                HighestScore = StartingLevels.Count > 0 ? StartingLevels.Max() : 0;
-            }
-            else
-            {
-                HighestScore = 0;
-            }
 
             // Build chart series and labels
             renzoXLabels = Enumerable.Range(1, RenzoChartData.Count).Select(i => $"S{i}").ToArray();
@@ -243,9 +194,8 @@
             renzoChartOptions = new ChartOptions
             {
                 YAxisTicks = 5,
-                YAxisLines = true
+                LineStrokeWidth = 2
             };
-            renzoChartOptions.YAxisTicksLength = 10;
 
             StateHasChanged();
         }
