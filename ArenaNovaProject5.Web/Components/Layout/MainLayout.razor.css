@@ -1,0 +1,53 @@
+.topnav {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+.topnav-inner {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* yan yana */
+.topnav-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+/* link görünümü */
+.topnav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 6px;
+  border-radius: 10px;
+
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.90;
+}
+
+.topnav-link:hover {
+  opacity: 1;
+}
+
+.nav-ic {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+/* aktif underline */
+.topnav-link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 999px;
+  background: #2f6fff;
+}

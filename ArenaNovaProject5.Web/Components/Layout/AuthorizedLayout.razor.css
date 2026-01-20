@@ -1,0 +1,11 @@
+.navbar-header{
+    display: flex;
+    align-items: center;
+}
+
+.header-right{
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

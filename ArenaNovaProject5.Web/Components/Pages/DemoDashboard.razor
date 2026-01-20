@@ -1,0 +1,175 @@
+@page "/demodashboard"
+@rendermode InteractiveServer
+@inject FirebaseService Firebase
+
+<PageTitle>Dashboard</PageTitle>
+
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+        <!-- Total Users Card -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Total Users</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@totalUsers</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Primary" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Active Parents -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Parents</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@parentCount</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" Size="Size.Large" Color="Color.Success" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Active Children -->
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Children</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@childCount</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.ChildCare" Size="Size.Large" Color="Color.Info" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Recent Users List -->
+        <MudItem xs="12" sm="6">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                        <MudText Typo="Typo.h6" Class="mb-2">Recent Registrations</MudText>
+                        @if (recentUsers.Any())
+                        {
+                            <MudList T="string" Dense="true">
+                                @foreach (var user in recentUsers.Take(3))
+                                {
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                                        @user.fullName - @user.role
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-2">No recent users</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                        <MudText Typo="Typo.h6">Quick Stats</MudText>
+                        <MudProgressLinear Value="@registrationRate" Color="Color.Primary" Class="mt-2" />
+                        <MudText Typo="Typo.caption">Registration Rate: @registrationRate%</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+        
+        <!-- Activity Chart Placeholder -->
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%">
+                <MudText Typo="Typo.h6">User Activity</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Last updated: @DateTime.Now.ToString("HH:mm")</span>
+                    }
+                </MudText>
+                <MudChart ChartType="ChartType.Line" ChartSeries="@chartSeries" 
+                          XAxisLabels="@xAxisLabels" Width="100%" Height="250px" />
+            </MudPaper>
+        </MudItem>
+        
+        <!-- More Cards -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Game Sessions</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@gameSessions</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">Average Playtime</MudText>
+                <MudText Typo="Typo.h3" Class="mt-4">@avgPlaytime min</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <MudText Typo="Typo.h6">System Status</MudText>
+                <MudChip T="string" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle" Class="mt-2">Online</MudChip>
+                <MudText Typo="Typo.body2" Class="mt-2">All systems operational</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private int totalUsers = 0;
+    private int parentCount = 0;
+    private int childCount = 0;
+    private int gameSessions = 0;
+    private int avgPlaytime = 0;
+    private double registrationRate = 75.5;
+    private bool isLoading = true;
+    private List<UserData> recentUsers = new();
+
+    // Chart data
+    private List<ChartSeries> chartSeries = new();
+    private string[] xAxisLabels = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+        InitializeChart();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            // Load all users from Firestore
+            var users = await Firebase.GetCollectionAsync<UserData>("users");
+            
+            totalUsers = users.Count();
+            parentCount = users.Count(u => u.role == "parent");
+            childCount = users.Count(u => u.role == "child");
+            recentUsers = users.OrderByDescending(u => u.createdAt).Take(5).ToList();
+            
+            // Mock data for now
+            gameSessions = 142;
+            avgPlaytime = 23;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void InitializeChart()
+    {
+        chartSeries = new List<ChartSeries>
+        {
+            new ChartSeries { Name = "Registrations", Data = new double[] { 5, 8, 12, 7, 15, 10, 14 } }
+        };
+    }
+
+    public class UserData
+    {
+        public string uid { get; set; } = string.Empty;
+        public string email { get; set; } = string.Empty;
+        public string fullName { get; set; } = string.Empty;
+        public string role { get; set; } = string.Empty;
+        public string createdAt { get; set; } = string.Empty;
+    }
+}

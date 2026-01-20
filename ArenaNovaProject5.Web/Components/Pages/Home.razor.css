@@ -1,0 +1,196 @@
+/* =========================
+   HOME / LANDING (NO BOX)
+   ========================= */
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 110px 24px 70px;
+}
+
+.hero-inner {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 2.75rem;
+  font-weight: 750;
+  letter-spacing: -0.6px;
+  margin-bottom: 14px;
+  color: rgba(15, 23, 42, 0.84);
+}
+
+.hero p {
+  font-size: 1.06rem;
+  color: rgba(15, 23, 42, 0.62);
+  margin: 0 auto 30px;
+  max-width: 640px;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* =========================
+   FEATURES (smooth separator)
+   ========================= */
+
+.features {
+  position: relative;
+  padding: 72px 24px 72px;
+}
+
+/* yumuşak geçiş: hero -> features */
+.features::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -44px;
+  height: 120px;
+  pointer-events: none;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(238, 246, 255, 0) 0%,
+    rgba(238, 246, 255, 0.85) 55%,
+    rgba(238, 246, 255, 1) 100%
+  );
+}
+
+.features-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12),
+              0 4px 10px rgba(15, 23, 42, 0.06);
+}
+
+.feature-card h3 {
+  margin-top: 12px;
+  font-size: 1.05rem;
+}
+
+.feature-card p {
+  font-size: 0.9rem;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.feature-card .mud-icon-root {
+  font-size: 30px;
+  color: #1f6fff;
+
+  display: inline-flex;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(31, 111, 255, 0.10);
+}
+
+/* =========================
+   HOW IT WORKS
+   ========================= */
+
+.how {
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.how h2 {
+  font-size: 1.85rem;
+  margin-bottom: 32px;
+}
+
+.how-steps {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+}
+
+.how-steps div {
+  max-width: 180px;
+}
+
+.how-steps span {
+  display: inline-block;
+  width: 42px;
+  height: 42px;
+  line-height: 42px;
+  border-radius: 50%;
+  background: #e0ecff;
+  color: #1f6fff;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* =========================
+   FOOTER
+   ========================= */
+
+.footer {
+  padding: 48px 24px 32px;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 800px) {
+  .hero {
+    padding: 84px 18px 54px;
+  }
+
+  .hero h1 {
+    font-size: 2.1rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .how-steps {
+    flex-direction: column;
+    gap: 22px;
+    align-items: center;
+  }
+}
+/* 🚨 KAREYİ ZORLA YOK ET 🚨 */
+
+/* Hero içindeki HER ŞEY flat olsun */
+.hero,
+.hero-inner,
+.hero * {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* MudBlazor bir şey inject ediyorsa onu da öldür */
+.hero .mud-paper,
+.hero .mud-card,
+.hero .mud-elevation-1,
+.hero .mud-elevation-2 {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}

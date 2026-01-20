@@ -1,0 +1,247 @@
+@page "/memorytree"
+@using MudBlazor
+@using System.Text.Json
+@inject ArenaNovaProject5.Web.Services.KidSessionService KidSession
+@inject HttpClient HttpClient
+@inject ArenaNovaProject5.Web.Services.AuthSessionService AuthSessionService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+    <MudText Typo="Typo.h4">Memory Tree</MudText>
+    <MudText Typo="Typo.body2" Class="muted">Game analysis and statistics</MudText>
+
+    <div class="spacer"></div>
+
+    @if (string.IsNullOrEmpty(KidSession.ActiveChildIdString))
+    {
+        <MudAlert Severity="Severity.Info">
+            <MudText>No kid selected. Please select a kid from the Kid Panel to view progress.</MudText>
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="3">
+            <!-- Memory Tree Chart -->
+            <MudItem xs="12" md="8">
+                <MudCard Class="card">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">Memory Tree Progress</MudText>
+                        <MudText Typo="Typo.body2" Class="muted">Session performance tracking</MudText>
+
+                        <div class="spacer"></div>
+
+                        @if (RenzoChartData != null && RenzoChartData.Any())
+                        {
+                            <MudChart ChartType="ChartType.Line"
+                                      ChartSeries="@renzoChartSeries"
+                                      XAxisLabels="@renzoXLabels"
+                                      ChartOptions="@renzoChartOptions"
+                                      Height="300px" />
+                        }
+                        else
+                        {
+                            <MudText>Game has not been played yet</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Stats Sidebar -->
+            <MudItem xs="12" md="4">
+                <MudCard Class="card">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">Statistics</MudText>
+                        <MudText Typo="Typo.body2" Class="muted">Memory Tree metrics</MudText>
+
+                        <div class="spacer"></div>
+
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
+                                <MudText Typo="Typo.caption" Style="opacity: 0.75;">Fastest Time</MudText>
+                                <MudText Typo="Typo.h6" Style="font-weight: 700;">@FastestTime</MudText>
+                                <MudText Typo="Typo.caption" Style="opacity: 0.6;">seconds</MudText>
+                            </div>
+
+                            <div style="padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
+                                <MudText Typo="Typo.caption" Style="opacity: 0.75;">Average Time</MudText>
+                                <MudText Typo="Typo.h6" Style="font-weight: 700;">@AverageTime</MudText>
+                                <MudText Typo="Typo.caption" Style="opacity: 0.6;">seconds</MudText>
+                            </div>
+
+                            <div style="padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
+                                <MudText Typo="Typo.caption" Style="opacity: 0.75;">Total Sessions</MudText>
+                                <MudText Typo="Typo.h6" Style="font-weight: 700;">@TotalSessions</MudText>
+                                <MudText Typo="Typo.caption" Style="opacity: 0.6;">games played</MudText>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private string? SelectedKidId;
+    private List<double> RenzoChartData = new();
+    private List<double> RenzoTimes = new();
+    private string[] renzoXLabels = new string[0];
+    private List<ChartSeries> renzoChartSeries = new();
+    private ChartOptions renzoChartOptions = new();
+    private string FastestTime = "--";
+    private string AverageTime = "--";
+    private string TotalSessions = "0";
+
+    protected override async Task OnInitializedAsync()
+    {
+        SelectedKidId = KidSession.ActiveChildIdString;
+        if (!string.IsNullOrEmpty(SelectedKidId))
+        {
+            await LoadKidProgress();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            var currentKidId = KidSession.ActiveChildIdString;
+            if (currentKidId != SelectedKidId)
+            {
+                SelectedKidId = currentKidId;
+                if (!string.IsNullOrEmpty(SelectedKidId))
+                {
+                    await LoadKidProgress();
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task LoadKidProgress()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(SelectedKidId))
+                return;
+
+            var projectId = "project5-arenanova";
+            
+            // Load Renzo progress
+            var renzoUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{SelectedKidId}/renzoprogress?pageSize=1000";
+            await LoadGameChartData(renzoUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadKidProgress Exception: {ex}");
+        }
+    }
+
+    private async Task LoadGameChartData(string url)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+
+            var response = await HttpClient.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("documents", out var documentsArray))
+                {
+                    List<double> chartData = new();
+                    List<double> valueData = new();
+                    List<string> xLabels = new();
+                    int index = 1;
+
+                    foreach (var document in documentsArray.EnumerateArray())
+                    {
+                        if (document.TryGetProperty("fields", out var fields))
+                        {
+                            string progressFieldName = "rprogress";
+                            
+                            if (fields.TryGetProperty(progressFieldName, out var progressField))
+                            {
+                                var progressValue = 0.0;
+                                
+                                if (progressField.TryGetProperty("integerValue", out var intVal))
+                                {
+                                    if (double.TryParse(intVal.GetString() ?? "0", out var parsedValue))
+                                    {
+                                        progressValue = parsedValue;
+                                    }
+                                }
+                                else if (progressField.TryGetProperty("stringValue", out var strVal))
+                                {
+                                    if (double.TryParse(strVal.GetString() ?? "0", out var parsedValue))
+                                    {
+                                        progressValue = parsedValue;
+                                    }
+                                }
+                                else if (progressField.TryGetProperty("doubleValue", out var doubleVal))
+                                {
+                                    if (double.TryParse(doubleVal.GetString() ?? "0", out var parsedValue))
+                                    {
+                                        progressValue = parsedValue;
+                                    }
+                                }
+
+                                chartData.Add(progressValue);
+                                xLabels.Add($"Session {index}");
+                                
+                                // Collect all rprogress values for statistics
+                                if (progressValue >= 0)
+                                {
+                                    valueData.Add(progressValue);
+                                }
+                                
+                                index++;
+                            }
+                        }
+                    }
+
+                    RenzoChartData = chartData;
+                    RenzoTimes = valueData;
+                    renzoXLabels = xLabels.ToArray();
+                    renzoChartSeries = new List<ChartSeries>
+                    {
+                        new ChartSeries { Name = "Time", Data = chartData.ToArray() }
+                    };
+
+                    // Calculate statistics based on rprogress values
+                    TotalSessions = chartData.Count.ToString();
+                    
+                    if (valueData.Any())
+                    {
+                        // Fastest time = minimum rprogress value from all sessions
+                        double fastestValue = valueData.Min();
+                        FastestTime = fastestValue.ToString("F2");
+                        
+                        // Average time = sum of all rprogress values / number of sessions
+                        double sumOfValues = valueData.Sum();
+                        double averageValue = sumOfValues / valueData.Count;
+                        AverageTime = averageValue.ToString("F2");
+                    }
+                    else
+                    {
+                        FastestTime = "--";
+                        AverageTime = "--";
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadGameChartData Exception: {ex}");
+        }
+    }
+}

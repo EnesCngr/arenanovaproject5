@@ -1,0 +1,5 @@
+.page-root { padding-top: 18px; padding-bottom: 24px; }
+.muted { opacity: 0.75; }
+.spacer { height: 12px; }
+.card { border-radius: 16px; }
+.kv { display:flex; align-items:center; justify-content:space-between; padding: 10px 0; }

@@ -1,0 +1,11 @@
+.page-root { padding-top: 18px; padding-bottom: 24px; }
+.muted { opacity: 0.75; }
+.spacer { height: 12px; }
+.card { border-radius: 16px; }
+.mini { border-radius: 16px; }
+.row { display:flex; align-items:center; }
+.row-between { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.ml { margin-left: 12px; }
+.big-icon { font-size: 34px; opacity: 0.9; }
+.pill { padding: 6px 10px; border-radius: 999px; background: rgba(47,111,255,0.12); border: 1px solid rgba(47,111,255,0.22); }
+.kv { display:flex; align-items:center; justify-content:space-between; padding: 10px 0; }

@@ -1,0 +1,173 @@
+@page "/kid/login"
+@using MudBlazor
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+@inject ArenaNovaProject5.Web.Services.KidSessionService KidSession
+@inject HttpClient HttpClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ArenaNovaProject5.Web.Services.AuthSessionService AuthSessionService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-6">
+    <MudPaper Class="pa-6" Elevation="0">
+        <MudText>🧒 Kid Login</MudText>
+
+        <MudText Class="mt-2">
+            Choose a child profile to Login as:
+        </MudText>
+
+        @if (IsLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (Kids.Count == 0)
+        {
+            <MudText Class="mt-4" Color="Color.Warning">
+                No kid accounts found. Please create a kid account first.
+            </MudText>
+        }
+        else
+        {
+            <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+                @foreach (var kid in Kids)
+                {
+                    var isSelected = SelectedKidId == kid.Id;
+                    <MudButton Variant="@(isSelected ? Variant.Filled : Variant.Outlined)" 
+                               Color="@(isSelected ? Color.Success : Color.Primary)"
+                               OnClick="@(() => SelectKid(kid.Id))"
+                               Style="@(isSelected ? "border: 3px solid #4caf50; box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);" : "")">
+                        @kid.Username
+                    </MudButton>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(SelectedKidId))
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Class="mt-4" FullWidth="true"
+                           OnClick="@ConfirmLogin">
+                    Continue as @SelectedKidName
+                </MudButton>
+            }
+        }
+
+        <MudDivider Class="my-4" />
+
+        <MudButton Variant="Variant.Outlined" Href="/dashboard">
+            Back to dashboard
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code{
+    private bool IsLoading = true;
+    private List<KidInfo> Kids = new();
+    private string? CurrentUserId;
+    private string? SelectedKidId;
+    private string SelectedKidName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            CurrentUserId = user.FindFirst("sub")?.Value 
+                ?? user.FindFirst("uid")?.Value
+                ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                ?? user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            
+            await LoadKids();
+        }
+        IsLoading = false;
+    }
+
+    private async Task LoadKids()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(CurrentUserId))
+            {
+                return;
+            }
+
+            var projectId = "project5-arenanova";
+            var url = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts";
+            
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+
+            var response = await HttpClient.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("documents", out var documentsArray))
+                {
+                    Kids.Clear();
+                    
+                    foreach (var document in documentsArray.EnumerateArray())
+                    {
+                        if (document.TryGetProperty("fields", out var fields))
+                        {
+                            var parentId = fields.TryGetProperty("parentid", out var pId) 
+                                ? pId.GetProperty("stringValue").GetString() 
+                                : "";
+
+                            if (parentId == CurrentUserId)
+                            {
+                                var kidId = document.TryGetProperty("name", out var name) 
+                                    ? name.GetString()?.Split('/').Last() ?? ""
+                                    : "";
+
+                                var username = fields.TryGetProperty("username", out var un) 
+                                    ? un.GetProperty("stringValue").GetString() ?? ""
+                                    : "";
+
+                                Kids.Add(new KidInfo 
+                                { 
+                                    Id = kidId, 
+                                    Username = username
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadKids Exception: {ex}");
+        }
+    }
+
+    private void SelectKid(string childId)
+    {
+        SelectedKidId = childId;
+        var kid = Kids.FirstOrDefault(k => k.Id == childId);
+        SelectedKidName = kid?.Username ?? "";
+    }
+
+    private void ConfirmLogin()
+    {
+        if (!string.IsNullOrEmpty(SelectedKidId))
+        {
+            KidSession.LoginWithId(SelectedKidId);
+            Nav.NavigateTo("/dashboard");
+        }
+    }
+
+    private class KidInfo
+    {
+        public string Id { get; set; } = "";
+        public string Username { get; set; } = "";
+    }
+}

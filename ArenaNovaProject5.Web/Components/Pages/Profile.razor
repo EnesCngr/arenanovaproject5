@@ -1,0 +1,274 @@
+@page "/profile"
+@rendermode InteractiveServer
+
+@using MudBlazor
+@using System.Text.Json
+@inject NavigationManager Nav
+@inject HttpClient HttpClient
+@inject ArenaNovaProject5.Web.Services.AuthSessionService Session
+@inject ArenaNovaProject5.Web.Services.FirebaseAuthStateProvider AuthState
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+
+    <!-- HEADER -->
+    <div class="row-between">
+        <div class="row">
+            <MudAvatar Size="Size.Large" Color="Color.Primary">@Initial</MudAvatar>
+            <div class="ml">
+                <MudText Typo="Typo.h5">Parent Profile</MudText>
+            </div>
+        </div>
+
+        <div class="row" style="gap:10px;">
+            @if (!IsEditing)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@StartEdit">
+                    Edit profile
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@Logout">
+                    Logout
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@CancelEdit">
+                    Cancel
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveEdit">
+                    Save changes
+                </MudButton>
+            }
+        </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <MudGrid Spacing="3">
+
+        <!-- PARENT SETTINGS -->
+        <MudItem xs="12">
+            <MudCard Class="card">
+                <MudCardContent>
+
+                    <MudText Typo="Typo.h6">Parent Settings</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">
+                        Account preferences (UI only for now)
+                    </MudText>
+
+                    <div class="spacer"></div>
+
+                    @if (!IsEditing)
+                    {
+                        <div class="kv">
+                            <MudText Typo="Typo.body2" Class="muted">Full name</MudText>
+                            <MudText Typo="Typo.subtitle2">@ProfileState.FullName</MudText>
+                        </div>
+                        <MudDivider />
+
+                        <div class="kv">
+                            <MudText Typo="Typo.body2" Class="muted">Email</MudText>
+                            <MudText Typo="Typo.subtitle2">@ProfileState.Email</MudText>
+                        </div>
+                        <MudDivider />
+
+                        <div class="kv">
+                            <MudText Typo="Typo.body2" Class="muted">Notifications</MudText>
+                            <MudText Typo="Typo.subtitle2">@(ProfileState.NotificationsEnabled ? "Enabled" : "Disabled")</MudText>
+                        </div>
+                        <MudDivider />
+
+                        <div class="kv">
+                            <MudText Typo="Typo.body2" Class="muted">Weekly summary</MudText>
+                            <MudText Typo="Typo.subtitle2">@(ProfileState.WeeklySummaryEnabled ? "Enabled" : "Disabled")</MudText>
+                        </div>
+
+                        <div class="spacer"></div>
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" OnClick="@ChangePassword">
+                            Change password
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="Edit.FullName"
+                                      Label="Full name"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      FullWidth="true"
+                                      Class="mb-2" />
+
+                        <MudTextField @bind-Value="Edit.Email"
+                                      Label="Email"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      FullWidth="true"
+                                      Disabled="true"
+                                      Class="mb-2" />
+
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin: 8px 0;">
+                            <input type="checkbox" @bind="Edit.NotificationsEnabled" />
+                            <span>Enable notifications</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin: 8px 0;">
+                            <input type="checkbox" @bind="Edit.WeeklySummaryEnabled" />
+                            <span>Enable weekly summary</span>
+                        </label>
+
+                        <MudText Typo="Typo.caption" Class="muted">
+                            Click “Save changes” to apply (currently UI-only).
+                        </MudText>
+                    }
+
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool IsEditing;
+
+    private ParentProfile ProfileState = new()
+    {
+        FullName = "Loading...",
+        Email = "Loading...",
+        NotificationsEnabled = true,
+        WeeklySummaryEnabled = true
+    };
+
+    private ParentProfile Edit = new();
+
+    private string Initial =>
+        string.IsNullOrWhiteSpace(ProfileState.FullName)
+            ? "P"
+            : ProfileState.FullName.Trim()[0].ToString().ToUpperInvariant();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch parent user data from Firebase
+        await LoadParentProfile();
+    }
+
+    private async Task LoadParentProfile()
+    {
+        try
+        {
+            var uid = Session.Uid;
+            var email = Session.Email;
+            
+            if (!string.IsNullOrEmpty(uid))
+            {
+                // Try to fetch user's custom profile data from Firestore
+                var projectId = "project5-arenanova";
+                var url = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/parents/{uid}";
+                
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                if (!string.IsNullOrEmpty(Session.IdToken))
+                {
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Session.IdToken);
+                }
+
+                try
+                {
+                    var response = await HttpClient.SendAsync(request);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("fields", out var fields))
+                        {
+                            var fullName = "";
+
+                            // Extract full name from Firestore
+                            if (fields.TryGetProperty("fullName", out var fullNameField))
+                            {
+                                if (fullNameField.TryGetProperty("stringValue", out var nameVal))
+                                {
+                                    fullName = nameVal.GetString() ?? "";
+                                }
+                            }
+
+                            ProfileState.FullName = string.IsNullOrWhiteSpace(fullName) ? email?.Split('@')[0] ?? "Parent" : fullName;
+                            ProfileState.Email = email ?? "";
+                        }
+                    }
+                    else
+                    {
+                        // Use Firebase email as fallback
+                        ProfileState.FullName = email?.Split('@')[0] ?? "Parent";
+                        ProfileState.Email = email ?? "";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching parent profile: {ex.Message}");
+                    // Use email as fallback
+                    ProfileState.FullName = email?.Split('@')[0] ?? "Parent";
+                    ProfileState.Email = email ?? "";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadParentProfile Exception: {ex.Message}");
+        }
+    }
+
+    private void StartEdit()
+    {
+        IsEditing = true;
+        Edit = ProfileState.Clone();
+    }
+
+    private void CancelEdit()
+    {
+        IsEditing = false;
+        Edit = new();
+    }
+
+    private void SaveEdit()
+    {
+        ProfileState = Edit.Clone();
+        IsEditing = false;
+        Edit = new();
+
+        // TODO: Firestore save later
+    }
+
+    private void ChangePassword()
+    {
+        Nav.NavigateTo("/forgot-password");
+    }
+
+    private void Logout()
+    {
+        // ✅ Sende method adı Clear()
+        Session.Clear();
+
+        // ✅ Sende bu metot varsa login/logout sonrası UI yenilemek için
+        AuthState.NotifyAuthChanged();
+
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+
+    private sealed class ParentProfile
+    {
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public bool NotificationsEnabled { get; set; }
+        public bool WeeklySummaryEnabled { get; set; }
+
+        public ParentProfile Clone() => new()
+        {
+            FullName = FullName,
+            Email = Email,
+            NotificationsEnabled = NotificationsEnabled,
+            WeeklySummaryEnabled = WeeklySummaryEnabled
+        };
+    }
+}

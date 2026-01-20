@@ -1,0 +1,131 @@
+@page "/login"
+@layout ArenaNovaProject5.Web.Components.Layout.PublicLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ArenaNovaProject5.Web.Services
+@using MudBlazor
+
+@inject FirebaseAuthService FirebaseAuth
+@inject AuthSessionService Session
+@inject FirebaseAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<PageTitle>Login</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="min-height: calc(100vh - 64px);">
+    <MudPaper Elevation="8" Class="pa-6" Style="width: 100%; border-radius: 16px;">
+        <MudText Typo="Typo.h5" Class="mb-1" Style="font-weight:700;">Welcome back</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4" Style="opacity:.75;">Sign in to access the parent dashboard.</MudText>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-3">
+                @Error
+            </MudAlert>
+        }
+
+        <EditForm Model="@FormModel" OnValidSubmit="@HandleLogin">
+            <DataAnnotationsValidator />
+
+            <MudTextField @bind-Value="FormModel.Email"
+                          Label="Email"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="InputType.Email"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.Password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="InputType.Password"
+                          FullWidth="true"
+                          Class="mb-2" />
+
+            <div class="d-flex justify-space-between align-center mb-4">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
+    <input type="checkbox" @bind="RememberMe" />
+    <span>Remember me</span>
+</label>
+
+
+                <a href="/forgot-password" style="text-decoration:none;">Forgot password?</a>
+            </div>
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Disabled="@IsBusy"
+                       Size="Size.Large">
+                @(IsBusy ? "Signing in..." : "Sign in")
+            </MudButton>
+        </EditForm>
+
+        <div class="d-flex justify-center align-center mt-4" style="gap:10px;">
+            <MudText Typo="Typo.body2" Style="opacity:.75;">Don’t have an account?</MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@GoToSignup">
+                Create New Account
+            </MudButton>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    // NOT: "Model" adını kullanmıyoruz. Login.razor dosya adı yüzünden
+    // Razor bazen "Login.Model" ambiguity (CS0229) üretiyor.
+    private LoginFormModel FormModel { get; set; } = new();
+
+    private bool IsBusy;
+    private bool RememberMe = true;
+    private string? Error;
+
+    [SupplyParameterFromQuery] public string? returnUrl { get; set; }
+
+    private async Task HandleLogin()
+    {
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            var res = await FirebaseAuth.SignInAsync(FormModel.Email, FormModel.Password);
+
+            if (res is null || string.IsNullOrWhiteSpace(res.IdToken))
+            {
+                Error = "Login failed. Please check your email and password.";
+                return;
+            }
+
+            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? FormModel.Email, res.LocalId);
+            AuthState.NotifyAuthChanged();
+
+            var target = string.IsNullOrWhiteSpace(returnUrl) ? "/dashboard" : "/" + returnUrl.TrimStart('/');
+            Nav.NavigateTo(target);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void GoToSignup() => Nav.NavigateTo("/signup");
+
+    private sealed class LoginFormModel
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = "";
+    }
+}

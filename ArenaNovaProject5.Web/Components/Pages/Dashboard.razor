@@ -1,0 +1,448 @@
+﻿@page "/dashboard"
+@layout ArenaNovaProject5.Web.Components.Layout.AuthorizedLayout
+@using MudBlazor
+@using System.Text.Json
+@rendermode InteractiveServer
+@inject ArenaNovaProject5.Web.Services.KidSessionService KidSession
+@inject HttpClient HttpClient
+@inject ArenaNovaProject5.Web.Services.AuthSessionService AuthSessionService
+
+<PageTitle>Dashboard</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="dashboard-root">
+
+    <!-- ===== TOP STATS ===== -->
+    <MudGrid Spacing="3">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="stat-card">
+                <div class="stat-icon blue">
+                    <MudIcon Icon="@Icons.Material.Filled.School" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Memory Tree Level</div>
+                    <div class="stat-value">@RenzoLevel</div>
+                    <div class="stat-sub">Current level</div>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="stat-card">
+                <div class="stat-icon green">
+                    <MudIcon Icon="@Icons.Material.Filled.Timer" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Fastest Time</div>
+                    <div class="stat-value">@FastestTime</div>
+                    <div class="stat-sub">Seconds (Graph Bug)</div>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="stat-card">
+                <div class="stat-icon blue">
+                    <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Last Played Memory Tree</div>
+                    <div class="stat-value">@LastPlayedRenzo</div>
+                    <div class="stat-sub">Memory Tree game</div>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="stat-card">
+                <div class="stat-icon green">
+                    <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Last Played Graph Bug</div>
+                    <div class="stat-value">@LastPlayedLizzy</div>
+                    <div class="stat-sub">Graph Bug game</div>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- ===== CHARTS ===== -->
+    <MudGrid Spacing="3" Class="mt-6">
+        <MudItem xs="12">
+            <MudPaper Class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Game Progress Charts</div>
+                        @if (SelectedKidId == null)
+                        {
+                            <div class="panel-sub">Select a kid to view progress</div>
+                        }
+                    </div>
+                </div>
+
+                @if (SelectedKidId != null)
+                {
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <div class="panel-title mb-2">Memory Tree Progress</div>
+                            @if (RenzoChartData != null && RenzoChartData.Any())
+                            {
+                                <MudChart ChartType="ChartType.Line"
+                                          ChartSeries="@renzoChartSeries"
+                                          XAxisLabels="@renzoXLabels"
+                                          ChartOptions="@renzoChartOptions"
+                                          Height="300px" />
+                            }
+                            else
+                            {
+                                <MudText>Game has not been played yet</MudText>
+                            }
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <div class="panel-title mb-2">Graph Bug Progress</div>
+                            @if (LizzyChartData != null && LizzyChartData.Any())
+                            {
+                                <MudChart ChartType="ChartType.Line"
+                                          ChartSeries="@lizzyChartSeries"
+                                          XAxisLabels="@lizzyXLabels"
+                                          ChartOptions="@lizzyChartOptions"
+                                          Height="300px" />
+                            }
+                            else
+                            {
+                                <MudText>Game has not been played yet</MudText>
+                            }
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudText>No kid selected. Please select a kid from the kid panel.</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+
+</MudContainer>
+
+@code {
+    string[] days = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    
+    string? SelectedKidId;
+    GameProgressData? CurrentGameProgress;
+    string RenzoProgress = "";
+    string RenzoStatus = "";
+    string LizzyProgress = "";
+    string LizzyStatus = "";
+
+    // Chart data
+    List<double> RenzoChartData = new();
+    List<double> LizzyChartData = new();
+    string[] renzoXLabels = new string[0];
+    string[] lizzyXLabels = new string[0];
+    List<ChartSeries> renzoChartSeries = new();
+    List<ChartSeries> lizzyChartSeries = new();
+    ChartOptions renzoChartOptions = new();
+    ChartOptions lizzyChartOptions = new();
+    
+    // Renzo Level
+    string RenzoLevel = "0";
+    
+    // Fastest Time for Lizzy
+    string FastestTime = "--";
+    
+    // Last Played timestamps
+    string LastPlayedRenzo = "--";
+    string LastPlayedLizzy = "--";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if a kid is logged in via KidSession
+        SelectedKidId = KidSession.ActiveChildIdString;
+        
+        if (!string.IsNullOrEmpty(SelectedKidId))
+        {
+            await LoadKidProgress();
+        }
+    }
+
+    private async Task LoadKidProgress()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(SelectedKidId))
+                return;
+
+            var projectId = "project5-arenanova";
+            
+            // Fetch the kid's account data to get renzolvl
+            var accountUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{SelectedKidId}";
+            var accountRequest = new HttpRequestMessage(HttpMethod.Get, accountUrl);
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                accountRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+            
+            try
+            {
+                var accountResponse = await HttpClient.SendAsync(accountRequest);
+                var accountJson = await accountResponse.Content.ReadAsStringAsync();
+                if (accountResponse.IsSuccessStatusCode)
+                {
+                    using var doc = JsonDocument.Parse(accountJson);
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("fields", out var fields))
+                    {
+                        if (fields.TryGetProperty("renzolvl", out var renzoLvlField))
+                        {
+                            // Try integerValue first, then stringValue
+                            if (renzoLvlField.TryGetProperty("integerValue", out var intVal))
+                            {
+                                RenzoLevel = intVal.GetString() ?? "0";
+                            }
+                            else if (renzoLvlField.TryGetProperty("stringValue", out var strVal))
+                            {
+                                RenzoLevel = strVal.GetString() ?? "0";
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching account data: {ex.Message}");
+            }
+            
+            // Try to fetch a specific Renzo document first to test access
+            Console.WriteLine($"Attempting to fetch specific Renzo doc for child: {SelectedKidId}");
+            var renzoDocUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{SelectedKidId}/renzoprogress/1";
+            var docRequest = new HttpRequestMessage(HttpMethod.Get, renzoDocUrl);
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                docRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+            
+            try
+            {
+                var docResponse = await HttpClient.SendAsync(docRequest);
+                var docJson = await docResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Renzo doc /1 response ({docResponse.StatusCode}): {docJson.Substring(0, Math.Min(500, docJson.Length))}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching specific Renzo doc: {ex.Message}");
+            }
+            
+            // Load Renzo progress with larger pageSize
+            var renzoUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{SelectedKidId}/renzoprogress?pageSize=1000";
+            await LoadGameChartData(renzoUrl, isRenzo: true);
+            
+            // Load Lizzy progress with larger pageSize
+            var lizzyUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{SelectedKidId}/lizzyprogress?pageSize=1000";
+            await LoadGameChartData(lizzyUrl, isRenzo: false);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadKidProgress Exception: {ex}");
+        }
+    }
+
+    private async Task LoadGameChartData(string url, bool isRenzo)
+    {
+        try
+        {
+            Console.WriteLine($"Loading {(isRenzo ? "Renzo" : "Lizzy")} from URL: {url}");
+            
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+
+            var response = await HttpClient.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Game {(isRenzo ? "Renzo" : "Lizzy")} FULL Response: {json}");
+                
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                // Handle different response formats
+                if (root.TryGetProperty("documents", out var documentsArray))
+                {
+                    Console.WriteLine($"Game {(isRenzo ? "Renzo" : "Lizzy")}: Found 'documents' property with {documentsArray.GetArrayLength()} items");
+                    List<double> chartData = new();
+                    List<string> xLabels = new();
+                    int index = 1;
+                    int docCount = 0;
+
+                    foreach (var document in documentsArray.EnumerateArray())
+                    {
+                        docCount++;
+                        if (document.TryGetProperty("fields", out var fields))
+                        {
+                            // For Renzo, look for rprogress; for Lizzy, look for lprogress
+                            string progressFieldName = isRenzo ? "rprogress" : "lprogress";
+                            
+                            if (fields.TryGetProperty(progressFieldName, out var progressField))
+                            {
+                                var progressValue = 0;
+                                
+                                // Try integerValue first
+                                if (progressField.TryGetProperty("integerValue", out var intVal))
+                                {
+                                    if (int.TryParse(intVal.GetString() ?? "0", out var parsedValue))
+                                    {
+                                        progressValue = parsedValue;
+                                    }
+                                }
+                                // Try doubleValue if integerValue doesn't exist
+                                else if (progressField.TryGetProperty("doubleValue", out var doubleVal))
+                                {
+                                    if (double.TryParse(doubleVal.GetString() ?? "0", out var parsedValue))
+                                    {
+                                        progressValue = (int)parsedValue;
+                                    }
+                                }
+                                
+                                chartData.Add(progressValue);
+                                xLabels.Add(index.ToString());
+                                index++;
+                                Console.WriteLine($"Document {docCount}: {progressFieldName}={progressValue}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Document {docCount}: Field '{progressFieldName}' not found. Available fields: {string.Join(", ", fields.EnumerateObject().Select(p => p.Name))}");
+                            }
+                        }
+                    }
+
+                    Console.WriteLine($"Game {(isRenzo ? "Renzo" : "Lizzy")}: Found {docCount} documents, extracted {chartData.Count} values");
+
+                    // Extract timestamp from last document
+                    string lastTimestamp = "--";
+                    var lastDocument = documentsArray.EnumerateArray().LastOrDefault();
+                    if (lastDocument.TryGetProperty("fields", out var lastFields))
+                    {
+                        if (lastFields.TryGetProperty("timestamp", out var timestampField))
+                        {
+                            // Try stringValue first (ISO 8601 format like "2026-01-19T10:45:59.0424962Z")
+                            if (timestampField.TryGetProperty("stringValue", out var stringVal))
+                            {
+                                var timestampStr = stringVal.GetString() ?? "";
+                                if (DateTime.TryParse(timestampStr, out var dateTime))
+                                {
+                                    lastTimestamp = dateTime.ToString("MMM dd, h:mm tt");
+                                }
+                            }
+                            // Fallback to _seconds format for other timestamp types
+                            else if (timestampField.TryGetProperty("_seconds", out var secondsVal))
+                            {
+                                if (long.TryParse(secondsVal.GetString() ?? "0", out var unixSeconds))
+                                {
+                                    var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(unixSeconds);
+                                    lastTimestamp = dateTime.ToString("MMM dd, h:mm tt");
+                                }
+                            }
+                        }
+                    }
+
+                    if (isRenzo)
+                    {
+                        LastPlayedRenzo = lastTimestamp;
+                        RenzoChartData = chartData;
+                        renzoXLabels = xLabels.ToArray();
+                        
+                        renzoChartSeries = new List<ChartSeries>
+                        {
+                            new ChartSeries
+                            {
+                                Name = "Progress",
+                                Data = chartData.ToArray()
+                            }
+                        };
+
+                        // Configure Y-axis to support negative values
+                        renzoChartOptions = new ChartOptions
+                        {
+                            YAxisTicks = 5,
+                            LineStrokeWidth = 2
+                        };
+                    }
+                    else
+                    {
+                        LastPlayedLizzy = lastTimestamp;
+                        LizzyChartData = chartData;
+                        lizzyXLabels = xLabels.ToArray();
+                        
+                        // Find fastest (minimum) time for Lizzy game
+                        if (chartData.Count > 0)
+                        {
+                            var minTime = chartData.Min();
+                            FastestTime = minTime.ToString("F2") + "s";
+                            Console.WriteLine($"Lizzy fastest time: {FastestTime}");
+                        }
+                        
+                        lizzyChartSeries = new List<ChartSeries>
+                        {
+                            new ChartSeries
+                            {
+                                Name = "Progress",
+                                Data = chartData.ToArray()
+                            }
+                        };
+
+                        // Configure Y-axis to support negative values
+                        lizzyChartOptions = new ChartOptions
+                        {
+                            YAxisTicks = 5,
+                            LineStrokeWidth = 2
+                        };
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"No 'documents' property found in response for {(isRenzo ? "Renzo" : "Lizzy")}. Root type: {root.ValueKind}, properties: {string.Join(", ", root.EnumerateObject().Select(p => p.Name).ToList())}");
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to load {(isRenzo ? "Renzo" : "Lizzy")} data: {response.StatusCode} - {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadGameChartData Exception for {(isRenzo ? "Renzo" : "Lizzy")}: {ex.Message}\n{ex.StackTrace}");
+        }
+    }
+
+    private class GameProgressData
+    {
+        public string? RenzoProgress { get; set; }
+        public string? LizzyProgress { get; set; }
+    }
+
+    List<ChartSeries> studySeries = new()
+    {
+        new ChartSeries
+        {
+            Name = "Study Time",
+            Data = new double[] { 32, 41, 37, 45, 40, 25, 20 }
+        }
+    };
+
+    List<ChartSeries> quizSeries = new()
+    {
+        new ChartSeries
+        {
+            Name = "Quiz",
+            Data = new double[] { 78, 82, 85, 88, 90, 87, 92 }
+        }
+    };
+}

@@ -1,0 +1,21 @@
+@using ArenaNovaProject5.Web.Services
+@inject AuthSessionService Session
+@inject NavigationManager Nav
+
+@if (Session.IsAuthenticated)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated)
+        {
+            var returnUrl = Uri.EscapeDataString(Nav.ToBaseRelativePath(Nav.Uri));
+            Nav.NavigateTo($"/login?returnUrl={returnUrl}");
+        }
+    }
+}

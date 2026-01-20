@@ -1,0 +1,447 @@
+@page "/kidmanagement"
+@layout ArenaNovaProject5.Web.Components.Layout.AuthorizedLayout
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@using ArenaNovaProject5.Web.Services
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject UserCreationService UserCreationService
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject HttpClient HttpClient
+@inject AuthSessionService AuthSessionService
+@inject KidSessionService KidSession
+
+<PageTitle>Kid Panel</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-8">
+    <div class="mb-6">
+        <MudText Typo="Typo.h4" Style="font-weight:700;">Kid Panel</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.75;">Create and manage kid accounts</MudText>
+        <MudText Typo="Typo.caption" Style="opacity:.5; margin-top: 8px;">Debug - User ID: @CurrentUserId</MudText>
+        @if (!string.IsNullOrEmpty(DebugMessage))
+        {
+            <MudText Typo="Typo.caption" Style="opacity:.5; margin-top: 4px; color: #ff9800;">@DebugMessage</MudText>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+    {
+        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Class="mb-4">
+            @SuccessMessage
+        </MudAlert>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+            @Error
+        </MudAlert>
+    }
+
+    <div class="row">
+        <!-- Create New Kid Form -->
+        <div class="col-md-6">
+            <MudPaper Elevation="2" Class="pa-6" Style="border-radius:12px;">
+                <MudText Typo="Typo.h6" Class="mb-4">Create New Kid Account</MudText>
+
+                <EditForm Model="@KidFormModel" OnValidSubmit="@HandleCreateKid">
+                    <DataAnnotationsValidator />
+
+                    <MudTextField @bind-Value="KidFormModel.Username"
+                                  Label="Username"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true"
+                                  FullWidth="true"
+                                  Class="mb-3" />
+
+                    <MudTextField @bind-Value="KidFormModel.Password"
+                                  Label="Password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true"
+                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                  FullWidth="true"
+                                  Class="mb-3" />
+
+                    <MudTextField @bind-Value="KidFormModel.ConfirmPassword"
+                                  Label="Confirm Password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true"
+                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                  FullWidth="true"
+                                  Class="mb-3" />
+
+                    <div class="d-flex justify-space-between align-center mb-4" style="gap:12px;">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Disabled="@IsCreatingKid"
+                                   OnClick="@TogglePassword">
+                            @(_showPassword ? "Hide" : "Show") Password
+                        </MudButton>
+
+                        <MudButton ButtonType="ButtonType.Submit"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@IsCreatingKid"
+                                   FullWidth="true">
+                            @(IsCreatingKid ? "Creating..." : "Create Kid Account")
+                        </MudButton>
+                    </div>
+                </EditForm>
+            </MudPaper>
+        </div>
+
+        <!-- Kids List -->
+        <div class="col-md-6">
+            <MudPaper Elevation="2" Class="pa-6" Style="border-radius:12px;">
+                <MudText Typo="Typo.h6" Class="mb-4">Kid Details</MudText>
+
+                @if (Kids == null || Kids.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Style="opacity:.75;">No kid accounts created yet</MudText>
+                }
+                else
+                {
+                    <MudList T="KidInfo">
+                        @foreach (var kid in Kids)
+                        {
+                            var isSelected = SelectedKidId == kid.Id;
+                            <MudListItem T="KidInfo" 
+                                        Class="@(isSelected ? "kid-selected" : "kid-item")"
+                                        Style="@(isSelected ? "border: 3px solid #1976d2; background-color: rgba(25, 118, 210, 0.05);" : "border: 1px solid #e0e0e0; background-color: transparent;")"
+                                    OnClick="@(() => SelectKid(kid.Id))">
+                                <div style="cursor: pointer; margin-bottom: 12px; border-radius: 4px; padding: 12px; display: block; width: 100%; transition: all 0.2s ease;">
+                                    <MudStack Spacing="2">
+                                        <div>
+                                            <MudText Typo="Typo.body2" Style="opacity:.6; font-size: 12px;">Username</MudText>
+                                            <MudText Typo="Typo.body1" Style="font-weight: 600;">@kid.Username</MudText>
+                                        </div>
+
+                                        <div>
+                                            <MudText Typo="Typo.body2" Style="opacity:.6; font-size: 12px;">Child ID</MudText>
+                                            <MudText Typo="Typo.caption" Style="font-family: monospace;">@kid.Id.Substring(0, Math.Min(12, kid.Id.Length))...</MudText>
+                                        </div>
+
+                                        <div>
+                                            <MudText Typo="Typo.body2" Style="opacity:.6; font-size: 12px;">Level</MudText>
+                                            <MudText Typo="Typo.body2">@kid.RenzoLevel</MudText>
+                                        </div>
+
+                                        <div>
+                                            <MudText Typo="Typo.body2" Style="opacity:.6; font-size: 12px;">Allowed to Play</MudText>
+                                            <MudText Typo="Typo.body2">@kid.AllowedToPlay</MudText>
+                                        </div>
+
+                                        <MudButton Variant="Variant.Filled"
+                                                   Size="Size.Small"
+                                                   Color="@(kid.AllowedToPlay == "yes" ? Color.Success : Color.Warning)"
+                                                   FullWidth="true"
+                                                   OnClick="@((e) => ToggleAllowedToPlay(kid.Id))">
+                                            @(kid.AllowedToPlay == "yes" ? "Block Access" : "Allow Access")
+                                        </MudButton>
+                                    </MudStack>
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            </MudPaper>
+        </div>
+    </div>
+</MudContainer>
+
+@code {
+    private bool _showPassword;
+    private bool IsCreatingKid;
+    private string? Error;
+    private string? SuccessMessage;
+    private string? DebugMessage;
+    private List<KidInfo> Kids = new();
+    private string? CurrentUserId;
+    private string SelectedKidId = "";
+
+    private CreateKidFormModel KidFormModel { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            // Try multiple claim types
+            CurrentUserId = user.FindFirst("sub")?.Value 
+                ?? user.FindFirst("uid")?.Value
+                ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                ?? user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            
+            Console.WriteLine($"CurrentUserId: {CurrentUserId}");
+            await LoadKids();
+            
+            // Load previously selected kid from KidSessionService
+            if (!string.IsNullOrEmpty(KidSession.ActiveChildIdString))
+            {
+                SelectedKidId = KidSession.ActiveChildIdString;
+            }
+        }
+    }
+
+    private async Task LoadKids()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(CurrentUserId))
+            {
+                DebugMessage = "ERROR: CurrentUserId is empty!";
+                return;
+            }
+
+            var projectId = "project5-arenanova";
+            var url = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts";
+            
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            
+            // Try to use IdToken first
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+
+            var response = await HttpClient.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("documents", out var documentsArray))
+                {
+                    Kids.Clear();
+                    
+                    foreach (var document in documentsArray.EnumerateArray())
+                    {
+                        if (document.TryGetProperty("fields", out var fields))
+                        {
+                            var parentId = fields.TryGetProperty("parentid", out var pId) 
+                                ? pId.GetProperty("stringValue").GetString() 
+                                : "";
+
+                            if (parentId == CurrentUserId)
+                            {
+                                var kidId = document.TryGetProperty("name", out var name) 
+                                    ? name.GetString()?.Split('/').Last() ?? ""
+                                    : "";
+
+                                var username = fields.TryGetProperty("username", out var un) 
+                                    ? un.GetProperty("stringValue").GetString() ?? ""
+                                    : "";
+
+                                var password = fields.TryGetProperty("password", out var pwd) 
+                                    ? pwd.GetProperty("stringValue").GetString() ?? ""
+                                    : "";
+
+                                var renzoLevel = fields.TryGetProperty("renzolvl", out var rl) 
+                                    ? int.Parse(rl.GetProperty("integerValue").GetString() ?? "1")
+                                    : 1;
+
+                                var allowedToPlay = fields.TryGetProperty("allowed_to_play", out var atp) 
+                                    ? atp.GetProperty("stringValue").GetString() ?? "yes"
+                                    : "yes";
+
+                                Kids.Add(new KidInfo 
+                                { 
+                                    Id = kidId, 
+                                    Username = username,
+                                    Password = password,
+                                    RenzoLevel = renzoLevel,
+                                    AllowedToPlay = allowedToPlay
+                                });
+                            }
+                        }
+                    }
+                    
+                    DebugMessage = $"Loaded {Kids.Count} kids";
+                    
+                    // Select the first kid by default if none selected
+                    if (string.IsNullOrEmpty(SelectedKidId) && Kids.Count > 0)
+                    {
+                        SelectedKidId = Kids[0].Id;
+                    }
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                DebugMessage = $"HTTP Error {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadKids Exception: {ex}");
+            DebugMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task HandleCreateKid()
+    {
+        Error = null;
+        SuccessMessage = null;
+        IsCreatingKid = true;
+
+        try
+        {
+            if (KidFormModel.Password != KidFormModel.ConfirmPassword)
+            {
+                Error = "Passwords do not match.";
+                return;
+            }
+
+            // Generate a unique childid
+            var childId = Guid.NewGuid().ToString("N").Substring(0, 20);
+
+            // Create the document in Firestore
+            var projectId = "project5-arenanova";
+            var url = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts";
+
+            var documentData = new
+            {
+                fields = new
+                {
+                    childid = new { stringValue = childId },
+                    parentid = new { stringValue = CurrentUserId },
+                    username = new { stringValue = KidFormModel.Username },
+                    password = new { stringValue = KidFormModel.Password },
+                    renzolvl = new { integerValue = "1" },
+                    allowed_to_play = new { stringValue = "yes" }
+                }
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(documentData);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Content = content;
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+
+            var response = await HttpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                SuccessMessage = $"Kid account '{KidFormModel.Username}' created successfully!";
+                KidFormModel = new();
+                _showPassword = false;
+
+                // Reload kids list
+                await LoadKids();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Error = $"Failed to create kid account: {response.StatusCode} - {errorContent.Substring(0, Math.Min(200, errorContent.Length))}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating kid account: {ex.Message}");
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsCreatingKid = false;
+        }
+    }
+
+    private async Task ToggleAllowedToPlay(string kidId)
+    {
+        try
+        {
+            Error = null;
+            SuccessMessage = null;
+
+            var kid = Kids.FirstOrDefault(k => k.Id == kidId);
+            if (kid == null) return;
+
+            var newValue = kid.AllowedToPlay == "yes" ? "no" : "yes";
+
+            var projectId = "project5-arenanova";
+            var url = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{kidId}";
+
+            var updateData = new
+            {
+                fields = new
+                {
+                    allowed_to_play = new { stringValue = newValue }
+                }
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(updateData);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Patch, url + "?updateMask.fieldPaths=allowed_to_play");
+            request.Content = content;
+            if (!string.IsNullOrEmpty(AuthSessionService.IdToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSessionService.IdToken);
+            }
+
+            var response = await HttpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                kid.AllowedToPlay = newValue;
+                SuccessMessage = $"Access {newValue} for {kid.Username}!";
+            }
+            else
+            {
+                Error = $"Failed to update: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = $"Error toggling access: {ex.Message}";
+        }
+    }
+
+    private void SelectKid(string kidId)
+    {
+        SelectedKidId = kidId;
+        KidSession.LoginWithId(kidId);
+    }
+
+    private class CreateKidFormModel
+    {
+        [Required, MinLength(2)]
+        public string Username { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string ConfirmPassword { get; set; } = "";
+    }
+
+    private class KidInfo
+    {
+        public string Id { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+        public int RenzoLevel { get; set; } = 1;
+        public string AllowedToPlay { get; set; } = "yes";
+    }
+}

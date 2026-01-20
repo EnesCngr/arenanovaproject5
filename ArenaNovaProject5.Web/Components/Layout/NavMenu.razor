@@ -1,0 +1,35 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
+
+<nav class="topnav">
+    <MudContainer MaxWidth="MaxWidth.False" Class="topnav-inner">
+        <div class="topnav-links">
+
+            <NavLink href="/dashboard" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="nav-ic" />
+                <span>Dashboard</span>
+            </NavLink>
+
+            <NavLink href="/profile" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.PersonOutline" Class="nav-ic" />
+                <span>Profile</span>
+            </NavLink>
+
+            <NavLink href="/progress" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="nav-ic" />
+                <span>Graph Bug</span>
+            </NavLink>
+
+            <NavLink href="/analytics" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Class="nav-ic" />
+                <span>Memory Tree</span>
+            </NavLink>
+
+            <NavLink href="/kidmanagement" class="topnav-link" activeClass="is-active" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" Class="nav-ic" />
+                <span>Kid Panel</span>
+            </NavLink>
+
+        </div>
+    </MudContainer>
+</nav>

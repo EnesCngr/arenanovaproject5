@@ -1,0 +1,66 @@
+.topnav {
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+  overflow: visible; /* underline kaybolmasın */
+}
+
+/* üst mavi bar ile menü arasında boşluk + genişlik hissi */
+.topnav-inner {
+  padding: 12px 26px 12px; /* top right/left bottom */
+}
+
+/* yan yana, tek satır */
+.topnav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: nowrap; /* alt satıra düşmesin */
+  width: 100%;
+  justify-content: flex-start;
+}
+
+/* menu item */
+.topnav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 14px 14px;
+  border-radius: 10px;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.95;
+
+  z-index: 1;
+}
+
+.topnav-link:hover {
+  opacity: 1;
+}
+
+/* icon */
+.nav-ic {
+  font-size: 22px;
+  opacity: 0.9;
+}
+
+/* ACTIVE underline - kesin görünür (linkin içinde) */
+.topnav-link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+
+  bottom: 4px;        /* element DIŞINA çıkmıyor -> kaybolmaz */
+  height: 3px;
+
+  border-radius: 999px;
+  background: #1f6fff;
+
+  z-index: 2;
+}

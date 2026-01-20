@@ -1,0 +1,69 @@
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-root">
+    <MudText Typo="Typo.h4">Controls</MudText>
+    <MudText Typo="Typo.body2" Class="muted">Parental controls (UI only).</MudText>
+
+    <div class="spacer"></div>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="6">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Screen Time</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Mock settings</MudText>
+
+                    <div class="spacer"></div>
+
+                    <MudText Typo="Typo.subtitle2">Daily limit: 60 min</MudText>
+                    <MudProgressLinear Value="60" Color="Color.Primary" Rounded="true" />
+
+                    <div class="spacer"></div>
+
+                    <MudText Typo="Typo.body2" Class="muted">Status: Active</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Restrictions</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">Mock list</MudText>
+
+                    <div class="spacer"></div>
+
+                    <div class="kv">
+                        <MudText Typo="Typo.body2" Class="muted">Only educational content</MudText>
+                        <MudText Typo="Typo.subtitle2">On</MudText>
+                    </div>
+                    <MudDivider />
+
+                    <div class="kv">
+                        <MudText Typo="Typo.body2" Class="muted">Disable chat features</MudText>
+                        <MudText Typo="Typo.subtitle2">Off</MudText>
+                    </div>
+                    <MudDivider />
+
+                    <div class="kv">
+                        <MudText Typo="Typo.body2" Class="muted">Allow purchases</MudText>
+                        <MudText Typo="Typo.subtitle2">Off</MudText>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudCard Class="card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">System Status</MudText>
+                    <MudText Typo="Typo.body2" Class="muted">All systems operational (demo)</MudText>
+
+                    <div class="spacer"></div>
+
+                    <MudProgressLinear Value="100" Color="Color.Success" Rounded="true" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

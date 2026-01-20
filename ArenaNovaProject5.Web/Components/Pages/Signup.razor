@@ -1,0 +1,189 @@
+﻿@page "/signup"
+@layout ArenaNovaProject5.Web.Components.Layout.PublicLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ArenaNovaProject5.Web.Services
+@using MudBlazor
+
+@inject FirebaseAuthService FirebaseAuth
+@inject UserCreationService UserCreationService
+@inject AuthSessionService Session
+@inject FirebaseAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<PageTitle>Sign Up</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small"
+              Class="d-flex justify-center align-center"
+              Style="min-height: calc(100vh - 64px); padding-top:24px; padding-bottom:24px;">
+
+    <MudPaper Elevation="10" Class="pa-6" Style="width:100%; border-radius:18px;">
+        <div class="mb-4">
+            <MudText Typo="Typo.h5" Style="font-weight:700;">Create your parent account</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.75;">
+                Register once to access the parental dashboard.
+            </MudText>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-3">
+                @Error
+            </MudAlert>
+        }
+
+        <EditForm Model="@FormModel" OnValidSubmit="@HandleSignup">
+            <DataAnnotationsValidator />
+
+            <MudTextField @bind-Value="FormModel.FullName"
+                          Label="Full name"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.Email"
+                          Label="Email"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="InputType.Email"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.Password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          FullWidth="true"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="FormModel.ConfirmPassword"
+                          Label="Confirm password"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Required="true"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          FullWidth="true"
+                          Class="mb-2" />
+
+            <div class="d-flex justify-space-between align-center mt-3" style="gap:12px;">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Disabled="@IsBusy"
+                           OnClick="@TogglePassword">
+                    @(_showPassword ? "Hide" : "Show")
+                </MudButton>
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@IsBusy"
+                           Size="Size.Large">
+                    @(IsBusy ? "Creating..." : "Create account")
+                </MudButton>
+            </div>
+        </EditForm>
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex justify-center align-center" style="gap:10px;">
+            <MudText Typo="Typo.body2" Style="opacity:.75;">Already have an account?</MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@GoToLogin">
+                Sign in
+            </MudButton>
+        </div>
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+    private bool _showPassword;
+    private bool IsBusy;
+    private string? Error;
+
+    private SignupFormModel FormModel { get; set; } = new();
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task HandleSignup()
+    {
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            if (FormModel.Password != FormModel.ConfirmPassword)
+            {
+                Error = "Passwords do not match.";
+                return;
+            }
+
+            var res = await FirebaseAuth.SignUpAsync(FormModel.Email, FormModel.Password);
+
+            if (res is null || string.IsNullOrWhiteSpace(res.IdToken))
+            {
+                Error = "Registration failed. Please try again.";
+                return;
+            }
+
+            // Call service to create user document in Firestore
+            try
+            {
+                Console.WriteLine($"[Signup] Calling UserCreationService.CreateUserDocumentAsync");
+                var success = await UserCreationService.CreateUserDocumentAsync(
+                    res.LocalId, 
+                    res.Email ?? FormModel.Email, 
+                    FormModel.FullName, 
+                    res.IdToken
+                );
+
+                if (!success)
+                {
+                    Console.WriteLine($"[Signup] Failed to create user document");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Signup] Error creating user document: {ex.Message}");
+                // Don't fail signup, user can still login
+            }
+
+            Session.SetSession(res.IdToken, res.RefreshToken, res.Email ?? FormModel.Email, res.LocalId);
+            AuthState.NotifyAuthChanged();
+
+            Nav.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Signup Exception: {ex.Message}");
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void GoToLogin() => Nav.NavigateTo("/login");
+
+    private sealed class SignupFormModel
+    {
+        [Required, MinLength(2)]
+        public string FullName { get; set; } = "";
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = "";
+
+        [Required, MinLength(6)]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}
