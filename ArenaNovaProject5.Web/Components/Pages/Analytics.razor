@@ -89,6 +89,8 @@
     private double HighestScore = 0;
     private double AverageScore = 0;
     private int TotalSessions = 0;
+    
+    private string? LastLoadedKidId = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,7 +100,13 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender) return;
-        await LoadRenzoData();
+        
+        // Only reload if kid ID changed
+        var currentKidId = KidSession.ActiveChildIdString;
+        if (currentKidId != LastLoadedKidId)
+        {
+            await LoadRenzoData();
+        }
     }
 
     private async Task LoadRenzoData()
@@ -111,8 +119,18 @@
             var token = AuthSessionService.IdToken;
             if (string.IsNullOrEmpty(token)) return;
 
-            var docPath = $"projects/project5-arenanova/databases/(default)/documents/childaccounts/{kidId}/renzoprogress";
-            var response = await HttpClient.GetAsync($"https://firestore.googleapis.com/v1/{docPath}?pageSize=500&key=AIzaSyBnGZdvJWAUfXr4ksf7mCJxhVMxL0gXQqk");
+            LastLoadedKidId = kidId;
+            
+            var projectId = "project5-arenanova";
+            var renzoUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/childaccounts/{kidId}/renzoprogress?pageSize=1000";
+            
+            var request = new HttpRequestMessage(HttpMethod.Get, renzoUrl);
+            if (!string.IsNullOrEmpty(token))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+            
+            var response = await HttpClient.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
             {
